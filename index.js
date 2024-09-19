@@ -1,6 +1,7 @@
 const TelegramApi = require('node-telegram-bot-api')
-
-
+require('dotenv').config();
+// token apply 
+const token = process.env.TELEGRAM_BOT_TOKEN;
 
 const bot = new TelegramApi(token, {
 	polling: true
@@ -134,7 +135,7 @@ function NodeGoogleSheets(keyMass, fun) {
 			auth: client
 		});
 
-		const spreadsheetId = "1YUHzq3_VjCuXZgiuqEWmp-d-Wu311AD4OIo8OkO6TuM";
+		const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
 		const metaData = await googleSheets.spreadsheets.get({
 			auth,
@@ -332,3 +333,4 @@ async function checkDayAndTime() {
 	})
 }
 setInterval(checkDayAndTime, 60000);
+
