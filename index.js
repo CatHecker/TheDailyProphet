@@ -58,7 +58,6 @@ let checkCommands = function (msg, group) {
 				break
 			}
 		}
-		//console.log(whoNeedSchedule)
 		group = ''
 		
 		const sql1 = "DELETE FROM dailyProphet WHERE chat_id = ?";
@@ -79,8 +78,12 @@ let checkCommands = function (msg, group) {
 		let lectionsForToday = `Расписание на сегодня: \n`
 		listOfData.map(googleString => {
 			if (day == googleString[0]) {
-				if (googleString[groupIndex] != null && groupIndex > 2) {
-					lectionsForToday = lectionsForToday + '\n' + `${googleString[1]}-${googleString[2]} -  ${googleString[groupIndex]}` + '\n'
+				if (googleString[groupIndex] != null && googleString[groupIndex] != '' && groupIndex > 2) {
+					googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
+						lectionsForToday += el + '\n'
+					})
+
+					lectionsForToday += `${googleString[1]}-${googleString[2]}\n`
 				}
 			}
 		})
@@ -90,8 +93,6 @@ let checkCommands = function (msg, group) {
 	if (text == 'Расписание на неделю' && group !== '') {
 		let weekDayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 		let tempWeekDay = 1
-		let getScheduleForWeek = new Date()
-
 		let groupIndex = listOfData[0].indexOf(group)
 		let lectionsForWeek = `
 <b>Расписание на неделю:
@@ -101,15 +102,16 @@ let checkCommands = function (msg, group) {
 		listOfData.map(googleString => {
 			let nowWeekDay = googleString[0];
 			if (googleString[groupIndex] != null && googleString[groupIndex] != '' && groupIndex > 2 && googleString[1] != 'Начало') {
+				lectionsForWeek += '\n'
 				if (nowWeekDay != tempWeekDay) {
 					lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n`
 					tempWeekDay = nowWeekDay
 				}
-				href = `h${googleString[groupIndex].split('h')[1]}`
-				lectionsForWeek = lectionsForWeek + `
-<a  href="${href}">${googleString[groupIndex].split('h')[0]}</a>
-${googleString[1]}-${googleString[2]}
-`
+				googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
+					lectionsForWeek += el + '\n'
+				})
+				
+				lectionsForWeek += `${googleString[1]}-${googleString[2]}\n`
 			}
 		})
 		bot.sendMessage(chatId, lectionsForWeek, {
