@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "dotenv": "^16.4.5",
+    "express": "^4.21.0",
     "googleapis": "^144.0.0",
     "mysql": "^2.18.1",
     "mysql2": "^3.11.0",
