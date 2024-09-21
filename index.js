@@ -225,9 +225,9 @@ let listOfData = []
 let firstUpdateGoogle = 1
 let googleSheetsUpdate = function () {
 	NodeGoogleSheets({
-		values: 'list1'
+		values: 'Лист 1'
 	}, (data) => {
-		listOfData = data.data.values.slice();
+		listOfData = data.data.values;
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
 			if (err) {
 				console.log(err)
