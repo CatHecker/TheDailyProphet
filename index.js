@@ -75,19 +75,30 @@ let checkCommands = function (msg, group) {
 		let groupIndex = listOfData[0].indexOf(group)
 		const getScheduleForToday = new Date();
 		let day = getScheduleForToday.getDay();
-		let lectionsForToday = `Расписание на сегодня: \n`
+		let lectionsForToday = `Расписание на сегодня: \n\n`
 		listOfData.map(googleString => {
-			if (day == googleString[0]) {
+			if (2 == googleString[0]) {
 				if (googleString[groupIndex] != null && googleString[groupIndex] != '' && groupIndex > 2) {
+					lectionsForToday +=  `⏰ ${googleString[1]}-${googleString[2]}\n\n`
 					googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
+						if (el.includes('Ссылка на видеовстресу')) {
+							el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
+								el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
+									lectionsForToday += el2
+								})
+							})
+						} else {
 						lectionsForToday += el + '\n'
+						}
 					})
 
-					lectionsForToday += `${googleString[1]}-${googleString[2]}\n`
+					
 				}
 			}
 		})
-		bot.sendMessage(chatId, lectionsForToday)
+		bot.sendMessage(chatId, lectionsForToday, {
+			disable_web_page_preview: true
+		})
 	}
 
 	if (text == 'Расписание на неделю' && group !== '') {
@@ -101,21 +112,32 @@ let checkCommands = function (msg, group) {
 `
 		listOfData.map(googleString => {
 			let nowWeekDay = googleString[0];
-			if (googleString[groupIndex] != null && googleString[groupIndex] != '' && groupIndex > 2 && googleString[1] != 'Начало') {
-				lectionsForWeek += '\n'
+			if (googleString[groupIndex] != null && googleString[groupIndex] != '' && googleString[groupIndex] != ' ' && groupIndex > 2 && googleString[1] != 'Начало') {
+				
+				
 				if (nowWeekDay != tempWeekDay) {
-					lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n`
+					lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n\n`
 					tempWeekDay = nowWeekDay
 				}
+				lectionsForWeek += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
 				googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
+					if (el.includes('Ссылка на видеовстресу')) {
+						el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
+							el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
+								lectionsForWeek += el2
+							})
+						})
+					} else {
 					lectionsForWeek += el + '\n'
+					}
 				})
+				lectionsForWeek += '\n'
 				
-				lectionsForWeek += `${googleString[1]}-${googleString[2]}\n`
 			}
 		})
 		bot.sendMessage(chatId, lectionsForWeek, {
-			parse_mode: 'HTML'
+			parse_mode: 'HTML', 
+			disable_web_page_preview: true
 		})
 	}
 
@@ -125,7 +147,8 @@ let checkCommands = function (msg, group) {
 
 Разработчики: <a href='t.me/chud0kot'>ChudoKOT</a>, <a href='t.me/iWanderling'>Никита Слывка</a>
 `, {
-			parse_mode: 'HTML'
+			parse_mode: 'HTML', 
+			disable_web_page_preview: true
 		})
 	}
 }
