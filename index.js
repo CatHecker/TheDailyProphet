@@ -3,7 +3,7 @@ require('dotenv').config();
 // token apply 
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000; // Используйте переменную окружения PORT, если она установлена
+const port = process.env.PORT || 3000; 
 
 app.get('/', (req, res) => {
   res.send('Hello, world!');
@@ -77,7 +77,7 @@ let checkCommands = function (msg, group) {
 		let day = getScheduleForToday.getDay();
 		let lectionsForToday = `Расписание на сегодня: \n\n`
 		listOfData.map(googleString => {
-			if (2 == googleString[0]) {
+			if (day == googleString[0]) {
 				if (googleString[groupIndex] != null && googleString[groupIndex] != '' && groupIndex > 2) {
 					lectionsForToday +=  `⏰ ${googleString[1]}-${googleString[2]}\n\n`
 					googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
@@ -166,8 +166,8 @@ function NodeGoogleSheets(keyMass, fun) {
 		credentials: {
             type: "service_account",
             project_id: process.env.GOOGLE_PROJECT_ID,
-            private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID,
-            private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), // заменяем \n на фактический перевод строки
+            private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID, //private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID
+            private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), 
             client_email: process.env.GOOGLE_CLIENT_EMAIL,
             client_id: process.env.GOOGLE_CLIENT_ID,
             auth_uri: "https://accounts.google.com/o/oauth2/auth",
@@ -355,7 +355,6 @@ bot.on('message', async msg => {
 })
 
 
-// Проверка времени
 // new check time function with parser
 async function checkDayAndTime() {
 	googleSheetsUpdate()
