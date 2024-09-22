@@ -4,9 +4,12 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000; 
-
+let helloWorld = {
+	"hello": 1,
+	"world": 0
+}
 app.get('/', (req, res) => {
-  res.send('Hello, world!');
+  res.send(helloWorld);
 });
 
 app.listen(port, () => {
