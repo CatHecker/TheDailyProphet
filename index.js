@@ -387,3 +387,6 @@ async function checkDayAndTime() {
 }
 setInterval(checkDayAndTime, 60000);
 
+setInterval(() => {
+	fetch('https://thedailyprophet.onrender.com/')
+}, 1000*60*10)
