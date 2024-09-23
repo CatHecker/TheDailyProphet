@@ -3,17 +3,17 @@ require('dotenv').config();
 // token apply 
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000; 
+const port = process.env.PORT || 3000;
 let helloWorld = {
 	"hello": 1,
 	"world": 0
 }
 app.get('/', (req, res) => {
-  res.send(helloWorld);
+	res.send(helloWorld);
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+	console.log(`Server is running on port ${port}`);
 });
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -55,26 +55,29 @@ let checkCommands = function (msg, group) {
 		return
 	}
 
-	if ((text === 'change' || text === "/change" || text == '/change@DailyProphetKpfuBot' || text == 'change@DailyProphetKpfuBot') && group !== '') {
-		
-		for (let i = 0; i < whoNeedSchedule.length; i++) {
-			if (whoNeedSchedule[i].chat_id == chatId) {
-				whoNeedSchedule.splice(i, 1)
-				break
+	if (text === 'change' || text === "/change" || text == '/change@DailyProphetKpfuBot' || text == 'change@DailyProphetKpfuBot') {
+		if (group == '') {
+			bot.sendMessage(chatId, `❌ Для выполнения этой команды нужно сначала ввести группу! ❌`)
+		} else {
+			for (let i = 0; i < whoNeedSchedule.length; i++) {
+				if (whoNeedSchedule[i].chat_id == chatId) {
+					whoNeedSchedule.splice(i, 1)
+					break
+				}
 			}
-		}
-		group = ''
-		
-		const sql1 = "DELETE FROM dailyProphet WHERE chat_id = ?";
-		const groupValues1 = [chatId];
+			group = ''
 
-		try {
-			connection.execute(sql1, groupValues1);
-			bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`);
-		} catch (err) {
-			console.error('Ошибка при обновлении группы:', err);
+			const sql1 = "DELETE FROM dailyProphet WHERE chat_id = ?";
+			const groupValues1 = [chatId];
+
+			try {
+				connection.execute(sql1, groupValues1);
+				bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`);
+			} catch (err) {
+				console.error('Ошибка при обновлении группы:', err);
+			}
+			return;
 		}
-		return;
 	}
 	if (text == 'Расписание на сегодня' && group !== '') {
 		let groupIndex = listOfData[0].indexOf(group)
@@ -84,26 +87,27 @@ let checkCommands = function (msg, group) {
 		listOfData.map(googleString => {
 			if (day == googleString[0]) {
 				if (googleString[groupIndex] != null) {
-				if (googleString[groupIndex].includes('Описание пары:')) {
-					lectionsForToday +=  `⏰ ${googleString[1]}-${googleString[2]}\n\n`
-					lectionsForToday += googleString[groupIndex]
-					// googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
-					// 	if (el.includes('Ссылка на видеовстресу')) {
-					// 		el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
-					// 			el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
-					// 				lectionsForToday += el2
-					// 			})
-					// 		})
-					// 	} else {
-					// 	lectionsForToday += el + '\n'
-					// 	}
-					// })
+					if (googleString[groupIndex].includes('Описание пары:')) {
+						lectionsForToday += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
+						lectionsForToday += googleString[groupIndex]
+						// googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
+						// 	if (el.includes('Ссылка на видеовстресу')) {
+						// 		el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
+						// 			el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
+						// 				lectionsForToday += el2
+						// 			})
+						// 		})
+						// 	} else {
+						// 	lectionsForToday += el + '\n'
+						// 	}
+						// })
 
-					lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию:/gi, '')
-					lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию: /gi, '')
-					lectionsForToday = lectionsForToday.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
-					lectionsForToday = lectionsForToday.replace(/Ссылка на трансляцию для зрителей:/gi, '')
-				}}
+						lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию:/gi, '')
+						lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию: /gi, '')
+						lectionsForToday = lectionsForToday.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
+						lectionsForToday = lectionsForToday.replace(/Ссылка на трансляцию для зрителей:/gi, '')
+					}
+				}
 			}
 		})
 		if (lectionsForToday == `Расписание на сегодня: \n\n`) {
@@ -126,32 +130,32 @@ let checkCommands = function (msg, group) {
 		listOfData.map(googleString => {
 			let nowWeekDay = googleString[0];
 			if (googleString[groupIndex] != null) {
-			if (googleString[groupIndex].includes('Описание пары:')) {
-				
-				
-				if (nowWeekDay != tempWeekDay) {
-					lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n\n`
-					tempWeekDay = nowWeekDay
-				}
-				lectionsForWeek += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
-				googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
-					if (el.includes('Ссылка на видеовстресу')) {
-						el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
-							el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
-								lectionsForWeek += el2
-							})
-						})
-					} else {
-					lectionsForWeek += el + '\n'
+				if (googleString[groupIndex].includes('Описание пары:')) {
+
+
+					if (nowWeekDay != tempWeekDay) {
+						lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n\n`
+						tempWeekDay = nowWeekDay
 					}
-				})
-				lectionsForWeek += '\n'
-				
+					lectionsForWeek += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
+					googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
+						if (el.includes('Ссылка на видеовстресу')) {
+							el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
+								el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
+									lectionsForWeek += el2
+								})
+							})
+						} else {
+							lectionsForWeek += el + '\n'
+						}
+					})
+					lectionsForWeek += '\n'
+
+				}
 			}
-		}
 		})
 		bot.sendMessage(chatId, lectionsForWeek, {
-			parse_mode: 'HTML', 
+			parse_mode: 'HTML',
 			disable_web_page_preview: true
 		})
 	}
@@ -164,7 +168,7 @@ let checkCommands = function (msg, group) {
 
 🧑‍💻 Разработчики: <a href='t.me/chud0kot'>ChudoKOT</a>, <a href='t.me/iWanderling'>Никита Слывка</a>
 `, {
-			parse_mode: 'HTML', 
+			parse_mode: 'HTML',
 			disable_web_page_preview: true
 		})
 	}
@@ -181,17 +185,17 @@ function NodeGoogleSheets(keyMass, fun) {
 
 
 		credentials: {
-            type: "service_account",
-            project_id: process.env.GOOGLE_PROJECT_ID,
-            private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID, //private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID
-            private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'), 
-            client_email: process.env.GOOGLE_CLIENT_EMAIL,
-            client_id: process.env.GOOGLE_CLIENT_ID,
-            auth_uri: "https://accounts.google.com/o/oauth2/auth",
-            token_uri: "https://oauth2.googleapis.com/token",
-            auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-            client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/" + process.env.GOOGLE_CLIENT_EMAIL,
-        },
+			type: "service_account",
+			project_id: process.env.GOOGLE_PROJECT_ID,
+			private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID, //private_key_id: process.env.GOOGLE_PRIVATE_KEY_ID
+			private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+			client_email: process.env.GOOGLE_CLIENT_EMAIL,
+			client_id: process.env.GOOGLE_CLIENT_ID,
+			auth_uri: "https://accounts.google.com/o/oauth2/auth",
+			token_uri: "https://oauth2.googleapis.com/token",
+			auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+			client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/" + process.env.GOOGLE_CLIENT_EMAIL,
+		},
 
 		scopes: "https://www.googleapis.com/auth/spreadsheets",
 	});
@@ -284,7 +288,7 @@ let googleSheetsUpdate = function () {
 					console.log('Google sheets подключены')
 					firstUpdateGoogle = 0
 				}
-				
+
 			}
 		})
 	})
@@ -304,7 +308,7 @@ let checkGroup = function (msg, choosenGroup) {
 				if (el.chat_id == chatId) {
 					choosenGroup = el.choosen_group;
 					groupFinded = true
-					
+
 					return
 				}
 			})
@@ -334,7 +338,7 @@ let addId = function (msg, choosenGroup) {
 			connection.execute(sql, groupValues, function (err, res) {
 				if (err) {
 					console.log(err);
-				} 
+				}
 			})
 			bot.sendMessage(chatId, `✅ Группа записана: ${text}`, {
 				reply_markup: {
@@ -348,7 +352,8 @@ let addId = function (msg, choosenGroup) {
 		}
 	})
 	if (choosenGroup == '') {
-		if (choosenGroup == '' && text != '/start' && text != 'Информация') {
+		let justListOfCommandsVersions = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot', 'Информация', '/change', 'change', '/change@DailyProphetKpfuBot', 'change@DailyProphetKpfuBot']
+		if (choosenGroup == '' && (!(justListOfCommandsVersions.includes(text)))) {
 			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
 		}
 	}
@@ -359,14 +364,14 @@ let addId = function (msg, choosenGroup) {
 
 bot.on('message', async msg => {
 	let choosenGroup = ''
-	
+
 	const chatId = msg.chat.id
 	for (bdString of whoNeedSchedule) {
 		if (bdString.chat_id == chatId) {
 			choosenGroup = bdString.choosen_group
 		}
 	}
-	
+
 	if (choosenGroup == '') {
 		checkGroup(msg, choosenGroup)
 	}
@@ -383,23 +388,23 @@ async function checkDayAndTime() {
 	listOfData.map(googleString => {
 		let justDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), googleString[1].split(':')[0], googleString[1].split(':')[1])
 		let newDate = new Date(justDate + 1000 * 60 * 10)
-		
+
 		if (now.getDay() == googleString[0] && now.getHours() == newDate.getHours() && now.getMinutes() == newDate.getMinutes()) {
 			for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
 				if (googleString[gIndex] != null) {
-				if (googleString[gIndex].includes('Описание пары')) {
-					let tempGroup = listOfData[0][gIndex]
-					if (!(whichGroupNeedSchedule.includes(tempGroup))) {
-						whichGroupNeedSchedule.push(tempGroup)
-						for (let groupsFromBD of whoNeedSchedule) {
-							if (groupsFromBD.choosen_group == tempGroup) {
-								let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
-								reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
-								bot.sendMessage(groupsFromBD.chat_id, reminderTxt)
+					if (googleString[gIndex].includes('Описание пары')) {
+						let tempGroup = listOfData[0][gIndex]
+						if (!(whichGroupNeedSchedule.includes(tempGroup))) {
+							whichGroupNeedSchedule.push(tempGroup)
+							for (let groupsFromBD of whoNeedSchedule) {
+								if (groupsFromBD.choosen_group == tempGroup) {
+									let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
+									reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
+									bot.sendMessage(groupsFromBD.chat_id, reminderTxt)
+								}
 							}
 						}
 					}
-				}
 				}
 			}
 
@@ -410,4 +415,4 @@ setInterval(checkDayAndTime, 60000);
 
 setInterval(() => {
 	fetch('https://thedailyprophet.onrender.com/')
-}, 1000*60*10)
+}, 1000 * 60 * 10)
