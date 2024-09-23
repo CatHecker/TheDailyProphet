@@ -84,7 +84,7 @@ let checkCommands = function (msg, group) {
 				if (googleString[groupIndex] != null) {
 				if (googleString[groupIndex].includes('Описание пары:')) {
 					lectionsForToday +=  `⏰ ${googleString[1]}-${googleString[2]}\n\n`
-
+					lectionsForToday += googleString[groupIndex]
 					// googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
 					// 	if (el.includes('Ссылка на видеовстресу')) {
 					// 		el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
@@ -104,6 +104,9 @@ let checkCommands = function (msg, group) {
 				}}
 			}
 		})
+		if (lectionsForToday == `Расписание на сегодня: \n\n`) {
+			lectionsForToday = '🥳 Сегодня пар нет'
+		}
 		bot.sendMessage(chatId, lectionsForToday, {
 			disable_web_page_preview: true
 		})
