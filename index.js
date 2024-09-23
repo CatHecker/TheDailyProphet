@@ -40,12 +40,12 @@ let checkCommands = function (msg, group) {
 	if (text[0] == '/') {
 		text = text.slice(1)
 	}
-	console.log(text)
-	if (text === 'start' || text == '/start') {
+	if (text === 'start' || text == '/start' || text == '/start@DailyProphetKpfuBot' || text == 'start@DailyProphetKpfuBot') {
+		// а также получить напоминание о следующей консультации
 		const startMessage = `
 <strong>🌟 Добро пожаловать, студент! 🌟</strong>
 
-📅 Здесь ты можешь найти расписание своей группы, а также получить напоминание о следующей консультации
+📅 Здесь ты можешь найти расписание своей группы 
 
 🔍 Чтобы начать введи номер группы (например: 01-001)
 		`
@@ -55,11 +55,10 @@ let checkCommands = function (msg, group) {
 		return
 	}
 
-	if ((text === 'change' || text == "/change")&& group !== '') {
+	if ((text === 'change' || text == "/change" || '/change@DailyProphetKpfuBot' || text == 'change@DailyProphetKpfuBot') && group !== '') {
 		
 		for (let i = 0; i < whoNeedSchedule.length; i++) {
 			if (whoNeedSchedule[i].chat_id == chatId) {
-				
 				whoNeedSchedule.splice(i, 1)
 				break
 			}
