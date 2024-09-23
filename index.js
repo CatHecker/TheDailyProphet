@@ -387,7 +387,7 @@ bot.on('message', async msg => {
 // new check time function with parser
 async function checkDayAndTime() {
 	googleSheetsUpdate()
-	let now = new Date(new Date() - 2 * 60 * 60 * 1000 + 1000 * 60 * 10)
+	let now = new Date(new Date() - 9 * 60 * 60 * 1000 + 1000 * 60 * 10)
 	let whichGroupNeedSchedule = []
 	listOfData.map(googleString => {
 		let justDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), googleString[1].split(':')[0], googleString[1].split(':')[1])
