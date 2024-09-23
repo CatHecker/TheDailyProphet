@@ -32,13 +32,18 @@ bot.setMyCommands([{
 ]).catch((err) => {
 	console.error('Ошибка при установке команд:', err);
 });
-
+let delS = (text) => {
+	if (text[0] == '/') {
+		text = text.slice(1)
+	}
+}
 
 let checkCommands = function (msg, group) {
 
 	let text = msg.text;
 	let chatId = msg.chat.id;
-	if (text === '/start') {
+	delS(text)
+	if (text === 'start') {
 		const startMessage = `
 <strong>🌟 Добро пожаловать, студент! 🌟</strong>
 
@@ -52,7 +57,7 @@ let checkCommands = function (msg, group) {
 		return
 	}
 
-	if (text === '/change' && group !== '') {
+	if (text === 'change' && group !== '') {
 		
 		for (let i = 0; i < whoNeedSchedule.length; i++) {
 			if (whoNeedSchedule[i].chat_id == chatId) {
@@ -312,11 +317,12 @@ let checkGroup = function (msg, choosenGroup) {
 		}
 	})
 }
+
 // Добавление id в бд
 let addId = function (msg, choosenGroup) {
 	let text = msg.text
 	let chatId = msg.chat.id
-	
+	delS(text)
 	listOfData[0].map(el => {
 		if (text == el) {
 			choosenGroup = String(text);
