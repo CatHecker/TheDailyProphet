@@ -55,7 +55,7 @@ let checkCommands = function (msg, group) {
 		return
 	}
 
-	if ((text === 'change' || text == "/change" || '/change@DailyProphetKpfuBot' || text == 'change@DailyProphetKpfuBot') && group !== '') {
+	if ((text === 'change' || text === "/change" || text == '/change@DailyProphetKpfuBot' || text == 'change@DailyProphetKpfuBot') && group !== '') {
 		
 		for (let i = 0; i < whoNeedSchedule.length; i++) {
 			if (whoNeedSchedule[i].chat_id == chatId) {
