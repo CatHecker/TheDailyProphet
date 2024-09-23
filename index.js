@@ -40,11 +40,11 @@ let checkCommands = function (msg, group) {
 	let chatId = msg.chat.id;
 	if (text === '/start') {
 		const startMessage = `
-<strong>Добро пожаловать, студент!</strong>
+<strong>🌟 Добро пожаловать, студент! 🌟</strong>
 
-Здесь ты можешь найти расписание своей группы, а также получить напоминание о следующей консультации
+📅 Здесь ты можешь найти расписание своей группы, а также получить напоминание о следующей консультации
 
-Чтобы начать введи номер своей группы (например: 01-001)
+🔍 Чтобы начать введи номер группы (например: 01-001)
 		`
 		bot.sendMessage(chatId, startMessage, {
 			parse_mode: 'HTML'
@@ -68,7 +68,7 @@ let checkCommands = function (msg, group) {
 
 		try {
 			connection.execute(sql1, groupValues1);
-			bot.sendMessage(chatId, `Значение группы сброшено, введите новый номер группы`);
+			bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`);
 		} catch (err) {
 			console.error('Ошибка при обновлении группы:', err);
 		}
@@ -81,21 +81,25 @@ let checkCommands = function (msg, group) {
 		let lectionsForToday = `Расписание на сегодня: \n\n`
 		listOfData.map(googleString => {
 			if (day == googleString[0]) {
-				if (googleString[groupIndex] != null && googleString[groupIndex] != '' && groupIndex > 2) {
+				if (googleString[groupIndex].includes('Описание пары:')) {
 					lectionsForToday +=  `⏰ ${googleString[1]}-${googleString[2]}\n\n`
-					googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
-						if (el.includes('Ссылка на видеовстресу')) {
-							el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
-								el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
-									lectionsForToday += el2
-								})
-							})
-						} else {
-						lectionsForToday += el + '\n'
-						}
-					})
 
-					
+					// googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
+					// 	if (el.includes('Ссылка на видеовстресу')) {
+					// 		el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
+					// 			el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
+					// 				lectionsForToday += el2
+					// 			})
+					// 		})
+					// 	} else {
+					// 	lectionsForToday += el + '\n'
+					// 	}
+					// })
+
+					lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию:/gi, '')
+					lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию: /gi, '')
+					lectionsForToday = lectionsForToday.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
+					lectionsForToday = lectionsForToday.replace(/Ссылка на трансляцию для зрителей:/gi, '')
 				}
 			}
 		})
@@ -115,7 +119,7 @@ let checkCommands = function (msg, group) {
 `
 		listOfData.map(googleString => {
 			let nowWeekDay = googleString[0];
-			if (googleString[groupIndex] != null && googleString[groupIndex] != '' && googleString[groupIndex] != ' ' && groupIndex > 2 && googleString[1] != 'Начало') {
+			if (googleString[groupIndex].includes('Описание пары:')) {
 				
 				
 				if (nowWeekDay != tempWeekDay) {
@@ -148,7 +152,9 @@ let checkCommands = function (msg, group) {
 		bot.sendMessage(chatId, `
 Вы выбрали группу: ${group}
 
-Разработчики: <a href='t.me/chud0kot'>ChudoKOT</a>, <a href='t.me/iWanderling'>Никита Слывка</a>
+Если вы нашли баг или у вас есть идея по улучшению бота пишите нам ⬇️
+
+🧑‍💻 Разработчики: <a href='t.me/chud0kot'>ChudoKOT</a>, <a href='t.me/iWanderling'>Никита Слывка</a>
 `, {
 			parse_mode: 'HTML', 
 			disable_web_page_preview: true
@@ -319,7 +325,7 @@ let addId = function (msg, choosenGroup) {
 					console.log(err);
 				} 
 			})
-			bot.sendMessage(chatId, `Группа записана: ${text}`, {
+			bot.sendMessage(chatId, `✅ Группа записана: ${text}`, {
 				reply_markup: {
 					keyboard: [
 						['Расписание на сегодня'],
@@ -332,7 +338,7 @@ let addId = function (msg, choosenGroup) {
 	})
 	if (choosenGroup == '') {
 		if (choosenGroup == '' && text != '/start' && text != 'Информация') {
-			bot.sendMessage(chatId, `Такой группы не существует или её нет в базе данных бота`)
+			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
 		}
 	}
 
@@ -366,16 +372,18 @@ async function checkDayAndTime() {
 	listOfData.map(googleString => {
 		let justDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), googleString[1].split(':')[0], googleString[1].split(':')[1])
 		let newDate = new Date(justDate + 1000 * 60 * 10)
-		//console.log(newDate.getHours(), newDate.getMinutes())
+		
 		if (now.getDay() == googleString[0] && now.getHours() == newDate.getHours() && now.getMinutes() == newDate.getMinutes()) {
 			for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
-				if (googleString[gIndex] != '' && gIndex > 2) {
+				if (googleString[gIndex].includes('Описание пары')) {
 					let tempGroup = listOfData[0][gIndex]
 					if (!(whichGroupNeedSchedule.includes(tempGroup))) {
 						whichGroupNeedSchedule.push(tempGroup)
 						for (let groupsFromBD of whoNeedSchedule) {
 							if (groupsFromBD.choosen_group == tempGroup) {
-								bot.sendMessage(groupsFromBD.chat_id, `Через 10 минут начинается ${googleString[gIndex]}`)
+								let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
+								reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
+								bot.sendMessage(groupsFromBD.chat_id, reminderTxt)
 							}
 						}
 					}
