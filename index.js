@@ -32,17 +32,14 @@ bot.setMyCommands([{
 ]).catch((err) => {
 	console.error('Ошибка при установке команд:', err);
 });
-let delS = (text) => {
-	if (text[0] == '/') {
-		text = text.slice(1)
-	}
-}
 
 let checkCommands = function (msg, group) {
 
 	let text = msg.text;
 	let chatId = msg.chat.id;
-	delS(text)
+	if (text[0] == '/') {
+		text = text.slice(1)
+	}
 	if (text === 'start') {
 		const startMessage = `
 <strong>🌟 Добро пожаловать, студент! 🌟</strong>
@@ -322,7 +319,9 @@ let checkGroup = function (msg, choosenGroup) {
 let addId = function (msg, choosenGroup) {
 	let text = msg.text
 	let chatId = msg.chat.id
-	delS(text)
+	if (text[0] == '/') {
+		text = text.slice(1)
+	}
 	listOfData[0].map(el => {
 		if (text == el) {
 			choosenGroup = String(text);
