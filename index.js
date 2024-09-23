@@ -38,10 +38,10 @@ let checkCommands = function (msg, group) {
 	let text = msg.text;
 	let chatId = msg.chat.id;
 	if (text != null && text != undefined && text != '') {
-	if (text[0] == '/') {
-		text = text.slice(1)
+		if (text[0] == '/') {
+			text = text.slice(1)
+		}
 	}
-}
 	if (text === 'start' || text == '/start' || text == '/start@DailyProphetKpfuBot' || text == 'start@DailyProphetKpfuBot') {
 		// а также получить напоминание о следующей консультации
 		const startMessage = `
@@ -387,12 +387,15 @@ bot.on('message', async msg => {
 // new check time function with parser
 async function checkDayAndTime() {
 	googleSheetsUpdate()
-	let now = new Date(new Date() - 9 * 60 * 60 * 1000 + 1000 * 60 * 10)
+
+	let newestTime = new Date()
+	let offset = newestTime.getTimezoneOffset() + 180
+	let now = new Date(new Date() - 0 + offset * 60 * 1000 + 1000 * 60 * 10)
+	//console.log(now.getHours() + ':' + now.getMinutes())
 	let whichGroupNeedSchedule = []
 	listOfData.map(googleString => {
 		let justDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), googleString[1].split(':')[0], googleString[1].split(':')[1])
 		let newDate = new Date(justDate + 1000 * 60 * 10)
-
 		if (now.getDay() == googleString[0] && now.getHours() == newDate.getHours() && now.getMinutes() == newDate.getMinutes()) {
 			for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
 				if (googleString[gIndex] != null) {
@@ -415,7 +418,7 @@ async function checkDayAndTime() {
 		}
 	})
 }
-setInterval(checkDayAndTime, 60000);
+setInterval(checkDayAndTime, 6000);
 
 setInterval(() => {
 	fetch('https://thedailyprophet.onrender.com/')
