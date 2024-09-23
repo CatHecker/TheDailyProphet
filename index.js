@@ -37,9 +37,11 @@ let checkCommands = function (msg, group) {
 
 	let text = msg.text;
 	let chatId = msg.chat.id;
+	if (text != null && text != undefined && text != '') {
 	if (text[0] == '/') {
 		text = text.slice(1)
 	}
+}
 	if (text === 'start' || text == '/start' || text == '/start@DailyProphetKpfuBot' || text == 'start@DailyProphetKpfuBot') {
 		// а также получить напоминание о следующей консультации
 		const startMessage = `
@@ -323,8 +325,10 @@ let checkGroup = function (msg, choosenGroup) {
 let addId = function (msg, choosenGroup) {
 	let text = msg.text
 	let chatId = msg.chat.id
-	if (text[0] == '/') {
-		text = text.slice(1)
+	if (text != null && text != undefined && text != '') {
+		if (text[0] == '/') {
+			text = text.slice(1)
+		}
 	}
 	listOfData[0].map(el => {
 		if (text == el) {
