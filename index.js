@@ -40,8 +40,8 @@ let checkCommands = function (msg, group) {
 	if (text[0] == '/') {
 		text = text.slice(1)
 	}
-	console.log(text, text[0])
-	if (text === 'start') {
+	console.log(text)
+	if (text === 'start' || text == '/start') {
 		const startMessage = `
 <strong>🌟 Добро пожаловать, студент! 🌟</strong>
 
@@ -55,7 +55,7 @@ let checkCommands = function (msg, group) {
 		return
 	}
 
-	if ((text === 'change' || text == "change")&& group !== '') {
+	if ((text === 'change' || text == "/change")&& group !== '') {
 		
 		for (let i = 0; i < whoNeedSchedule.length; i++) {
 			if (whoNeedSchedule[i].chat_id == chatId) {
