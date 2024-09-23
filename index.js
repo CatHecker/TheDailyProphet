@@ -81,6 +81,7 @@ let checkCommands = function (msg, group) {
 		let lectionsForToday = `Расписание на сегодня: \n\n`
 		listOfData.map(googleString => {
 			if (day == googleString[0]) {
+				if (googleString[groupIndex] != null) {
 				if (googleString[groupIndex].includes('Описание пары:')) {
 					lectionsForToday +=  `⏰ ${googleString[1]}-${googleString[2]}\n\n`
 
@@ -100,7 +101,7 @@ let checkCommands = function (msg, group) {
 					lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию: /gi, '')
 					lectionsForToday = lectionsForToday.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
 					lectionsForToday = lectionsForToday.replace(/Ссылка на трансляцию для зрителей:/gi, '')
-				}
+				}}
 			}
 		})
 		bot.sendMessage(chatId, lectionsForToday, {
@@ -119,6 +120,7 @@ let checkCommands = function (msg, group) {
 `
 		listOfData.map(googleString => {
 			let nowWeekDay = googleString[0];
+			if (googleString[groupIndex] != null) {
 			if (googleString[groupIndex].includes('Описание пары:')) {
 				
 				
@@ -141,6 +143,7 @@ let checkCommands = function (msg, group) {
 				lectionsForWeek += '\n'
 				
 			}
+		}
 		})
 		bot.sendMessage(chatId, lectionsForWeek, {
 			parse_mode: 'HTML', 
@@ -375,6 +378,7 @@ async function checkDayAndTime() {
 		
 		if (now.getDay() == googleString[0] && now.getHours() == newDate.getHours() && now.getMinutes() == newDate.getMinutes()) {
 			for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
+				if (googleString[gIndex] != null) {
 				if (googleString[gIndex].includes('Описание пары')) {
 					let tempGroup = listOfData[0][gIndex]
 					if (!(whichGroupNeedSchedule.includes(tempGroup))) {
@@ -387,6 +391,7 @@ async function checkDayAndTime() {
 							}
 						}
 					}
+				}
 				}
 			}
 
