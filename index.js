@@ -34,9 +34,9 @@ bot.setMyCommands([{
 });
 
 let checkCommands = function (msg, group) {
-
 	let text = msg.text;
 	let chatId = msg.chat.id;
+	let course = 4 - Number(group[3])
 	if (text != null && text != undefined && text != '') {
 		if (text[0] == '/') {
 			text = text.slice(1)
@@ -82,13 +82,13 @@ let checkCommands = function (msg, group) {
 		}
 	}
 	if (text == 'Расписание на сегодня' && group !== '') {
-		let groupIndex = listOfData[0].indexOf(group)
+		let groupIndex = listsOfData[course][0].indexOf(group)
 		let time1 = new Date()
 		let offset1 = time1.getTimezoneOffset() + 180
 		let time2 = new Date(new Date() - 0 + offset1 * 60 * 1000 + 1000 * 60 * 10)
 		let day = time2.getDay();
 		let lectionsForToday = `Расписание на сегодня: \n\n`
-		listOfData.map(googleString => {
+		listsOfData[course].map(googleString => {
 			if (day == googleString[0]) {
 				if (googleString[groupIndex] != null) {
 					if (googleString[groupIndex].includes('Описание пары:')) {
@@ -125,13 +125,14 @@ let checkCommands = function (msg, group) {
 	if (text == 'Расписание на неделю' && group !== '') {
 		let weekDayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 		let tempWeekDay = 1
-		let groupIndex = listOfData[0].indexOf(group)
+		let groupIndex = listsOfData[course][0].indexOf(group)
 		let lectionsForWeek = `
 <b>Расписание на неделю:
 
 Понедельник</b>
+
 `
-		listOfData.map(googleString => {
+		listsOfData[course].map(googleString => {
 			let nowWeekDay = googleString[0];
 			if (googleString[groupIndex] != null) {
 				if (googleString[groupIndex].includes('Описание пары:')) {
@@ -272,34 +273,46 @@ connection.connect(function (err) {
 // google sheets fn
 
 let whoNeedSchedule = []
-let listOfData = ['']
+let listsOfData = [
+	[''],
+	[''],
+	[''],
+	['']
+]
 let firstUpdateGoogle = 1
-
+//let listOfData1 = ['']
+let counterOfConnection = 0
 let googleSheetsUpdate = function () {
-	NodeGoogleSheets({
-		values: 'Курс 1'
-	}, (data) => {
-		listOfData = data.data.values;
-		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
-			if (err) {
-				console.log(err)
-			} else {
-				if (firstUpdateGoogle) {
-					res.map(el => {
-						listOfData[0].map(groupFirstStr => {
-							if (el.choosen_group == groupFirstStr) {
-								whoNeedSchedule.push(el)
-							}
+	for (let i = 1; i < 5; i++) {
+		NodeGoogleSheets({
+			values: `Курс ${i}`
+		}, (data) => {
+			let listOfData = data.data.values;
+			connection.execute("SELECT * FROM dailyProphet", function (err, res) {
+				if (err) {
+					console.log(err)
+				} else {
+					counterOfConnection++
+					if (firstUpdateGoogle && counterOfConnection == 4) {
+						onListener()
+						res.map(el => {
+							listOfData[0].map(groupFirstStr => {
+								if (el.choosen_group == groupFirstStr) {
+									whoNeedSchedule.push(el)
+								}
+							})
+
 						})
+						console.log('Google sheets подключены')
+						firstUpdateGoogle = 0
+					}
 
-					})
-					console.log('Google sheets подключены')
-					firstUpdateGoogle = 0
 				}
+				listsOfData[i - 1] = listOfData
+			})
 
-			}
 		})
-	})
+	}
 
 }
 googleSheetsUpdate()
@@ -316,13 +329,13 @@ let checkGroup = function (msg, choosenGroup) {
 				if (el.chat_id == chatId) {
 					choosenGroup = el.choosen_group;
 					groupFinded = true
-
 					return
 				}
 			})
 			if (groupFinded == false) {
-				addId(msg, choosenGroup)
+				return addId(msg, choosenGroup)
 			}
+			checkCommands(msg, choosenGroup)
 		}
 	})
 }
@@ -336,30 +349,33 @@ let addId = function (msg, choosenGroup) {
 			text = text.slice(1)
 		}
 	}
-	listOfData[0].map(el => {
-		if (text == el) {
-			choosenGroup = String(text);
-			const sql = "INSERT INTO dailyProphet VALUES (?, ?)";
-			const groupValues = [chatId, choosenGroup]
-			whoNeedSchedule.push({
-				chat_id: chatId,
-				choosen_group: choosenGroup
-			})
-			connection.execute(sql, groupValues, function (err, res) {
-				if (err) {
-					console.log(err);
-				}
-			})
-			bot.sendMessage(chatId, `✅ Группа записана: ${text}`, {
-				reply_markup: {
-					keyboard: [
-						['Расписание на сегодня'],
-						["Расписание на неделю"],
-						['Информация']
-					]
-				}
-			})
-		}
+	listsOfData.map(listOfData => {
+		listOfData[0].map(el => {
+			if (text == el) {
+				choosenGroup = String(text);
+				checkCommands(msg, choosenGroup)
+				const sql = "INSERT INTO dailyProphet VALUES (?, ?)";
+				const groupValues = [chatId, choosenGroup]
+				whoNeedSchedule.push({
+					chat_id: chatId,
+					choosen_group: choosenGroup
+				})
+				connection.execute(sql, groupValues, function (err, res) {
+					if (err) {
+						console.log(err);
+					}
+				})
+				bot.sendMessage(chatId, `✅ Группа записана: ${text}`, {
+					reply_markup: {
+						keyboard: [
+							['Расписание на сегодня'],
+							["Расписание на неделю"],
+							['Информация']
+						]
+					}
+				})
+			}
+		})
 	})
 	if (choosenGroup == '') {
 		let justListOfCommandsVersions = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot', 'Информация', '/change', 'change', '/change@DailyProphetKpfuBot', 'change@DailyProphetKpfuBot']
@@ -371,59 +387,61 @@ let addId = function (msg, choosenGroup) {
 }
 
 // listener сoобщений
-
-bot.on('message', async msg => {
-	let choosenGroup = ''
-
-	const chatId = msg.chat.id
-	for (bdString of whoNeedSchedule) {
-		if (bdString.chat_id == chatId) {
-			choosenGroup = bdString.choosen_group
+let onListener = () => {
+	bot.on('message', async msg => {
+		googleSheetsUpdate()
+		let choosenGroup = ''
+		const chatId = msg.chat.id
+		for (bdString of whoNeedSchedule) {
+			if (bdString.chat_id == chatId) {
+				choosenGroup = bdString.choosen_group
+			}
 		}
-	}
-
-	if (choosenGroup == '') {
-		checkGroup(msg, choosenGroup)
-	}
-
-	checkCommands(msg, choosenGroup)
-})
-
+		if (choosenGroup == '') {
+			checkGroup(msg, choosenGroup)
+		} else {
+			checkCommands(msg, choosenGroup)
+		}
+	})
+}
 
 // new check time function with parser
 async function checkDayAndTime() {
-	googleSheetsUpdate()
+
 	let newestTime = new Date()
 	let offset = newestTime.getTimezoneOffset() + 180
 	let now = new Date(new Date() - 0 + offset * 60 * 1000 + 1000 * 60 * 10)
 	let whichGroupNeedSchedule = []
-	listOfData.map(googleString => {
-		let justDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), googleString[1].split(':')[0], googleString[1].split(':')[1])
-		let newDate = new Date(justDate)
-		if (now.getDay() == googleString[0] && now.getHours() == newDate.getHours() && now.getMinutes() == newDate.getMinutes()) {
-			for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
-				if (googleString[gIndex] != null) {
-					if (googleString[gIndex].includes('Описание пары')) {
-						let tempGroup = listOfData[0][gIndex]
-						if (!(whichGroupNeedSchedule.includes(tempGroup))) {
-							whichGroupNeedSchedule.push(tempGroup)
-							for (let groupsFromBD of whoNeedSchedule) {
-								if (groupsFromBD.choosen_group == tempGroup) {
-									let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
-									reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
-									bot.sendMessage(groupsFromBD.chat_id, reminderTxt)
+	listsOfData.map(listOfData => {
+		listOfData.map(googleString => {
+			let justDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), googleString[1].split(':')[0], googleString[1].split(':')[1])
+			let newDate = new Date(justDate)
+			if (now.getDay() == googleString[0] && now.getHours() == newDate.getHours() && now.getMinutes() == newDate.getMinutes()) {
+				for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
+					if (googleString[gIndex] != null) {
+						if (googleString[gIndex].includes('Описание пары')) {
+							let tempGroup = listsOfData[course][0][gIndex]
+							if (!(whichGroupNeedSchedule.includes(tempGroup))) {
+								whichGroupNeedSchedule.push(tempGroup)
+								for (let groupsFromBD of whoNeedSchedule) {
+									if (groupsFromBD.choosen_group == tempGroup) {
+										let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
+										reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
+										bot.sendMessage(groupsFromBD.chat_id, reminderTxt)
+									}
 								}
 							}
 						}
 					}
 				}
-			}
 
-		}
+			}
+		})
 	})
 }
 setInterval(checkDayAndTime, 60000);
 
 setInterval(() => {
 	fetch('https://thedailyprophet.onrender.com/')
+	googleSheetsUpdate()
 }, 1000 * 60 * 10)
