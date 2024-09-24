@@ -83,14 +83,16 @@ let checkCommands = function (msg, group) {
 	}
 	if (text == 'Расписание на сегодня' && group !== '') {
 		let groupIndex = listOfData[0].indexOf(group)
-		const getScheduleForToday = new Date();
-		let day = getScheduleForToday.getDay();
+		let time1 = new Date()
+		let offset1 = time1.getTimezoneOffset() + 180
+		let time2 = new Date(new Date() - 0 + offset1 * 60 * 1000 + 1000 * 60 * 10)
+		let day = time2.getDay();
 		let lectionsForToday = `Расписание на сегодня: \n\n`
 		listOfData.map(googleString => {
 			if (day == googleString[0]) {
 				if (googleString[groupIndex] != null) {
 					if (googleString[groupIndex].includes('Описание пары:')) {
-						lectionsForToday += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
+						lectionsForToday += `\n⏰ ${googleString[1]}-${googleString[2]}\n\n`
 						lectionsForToday += googleString[groupIndex]
 						// googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
 						// 	if (el.includes('Ссылка на видеовстресу')) {
@@ -271,7 +273,7 @@ let listOfData = []
 let firstUpdateGoogle = 1
 let googleSheetsUpdate = function () {
 	NodeGoogleSheets({
-		values: 'Лист 1'
+		values: 'Курс 1'
 	}, (data) => {
 		listOfData = data.data.values;
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
@@ -393,7 +395,7 @@ async function checkDayAndTime() {
 	let whichGroupNeedSchedule = []
 	listOfData.map(googleString => {
 		let justDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), googleString[1].split(':')[0], googleString[1].split(':')[1])
-		let newDate = new Date(justDate + 1000 * 60 * 10)
+		let newDate = new Date(justDate)
 		if (now.getDay() == googleString[0] && now.getHours() == newDate.getHours() && now.getMinutes() == newDate.getMinutes()) {
 			for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
 				if (googleString[gIndex] != null) {
