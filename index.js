@@ -392,7 +392,7 @@ async function checkDayAndTime() {
 	console.log('Newest time: ' + newestTime.getHours() + ':' + newestTime.getMinutes())
 	let offset = newestTime.getTimezoneOffset() + 180
 	console.log(offset)
-	let now = new Date(new Date() - 0 + offset * 60 * 1000 + + 2 * 60 * 1000 + 1000 * 60 * 10)
+	let now = new Date(new Date() - 0 + offset * 60 * 1000 + 2 * 60 * 1000 + 1000 * 60 * 10)
 	console.log(now.getHours() + ':' + now.getMinutes())
 	let whichGroupNeedSchedule = []
 	listOfData.map(googleString => {
