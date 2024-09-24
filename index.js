@@ -268,9 +268,13 @@ connection.connect(function (err) {
 		console.log("Подключение к серверу MySQL успешно установлено");
 	}
 });
+
+// google sheets fn
+
 let whoNeedSchedule = []
-let listOfData = []
+let listOfData = ['']
 let firstUpdateGoogle = 1
+
 let googleSheetsUpdate = function () {
 	NodeGoogleSheets({
 		values: 'Курс 1'
