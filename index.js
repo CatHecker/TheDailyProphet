@@ -93,21 +93,46 @@ let checkCommands = function (msg, group) {
 				if (googleString[groupIndex] != null) {
 					if (googleString[groupIndex].includes('Описание пары:')) {
 						lectionsForToday += `\n⏰ ${googleString[1]}-${googleString[2]}\n\n`
-						lectionsForToday += googleString[groupIndex]
-						// googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
-						// 	if (el.includes('Ссылка на видеовстресу')) {
-						// 		el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
-						// 			el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
-						// 				lectionsForToday += el2
-						// 			})
-						// 		})
-						// 	} else {
-						// 	lectionsForToday += el + '\n'
-						// 	}
-						// })
+						googleString[groupIndex] = googleString[groupIndex].split('\n')
 
-						lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию:/gi, '')
-						lectionsForToday = lectionsForToday.replace(/Ссылка на консультацию: /gi, '')
+						let teleCou = 1
+						let MTSCou = 1
+						let chatCou = 1
+						let calendarCou = 1
+						let discordCou = 1
+						let zoomCou = 1
+						let matCou = 1
+						for (googleCell of googleString[groupIndex]) {
+							let link = googleCell
+							let text = ''
+
+							if (googleCell.includes('https://')) {
+								// telemost, mts, yandex chat, yandex calendar, discord, zoom, materials
+								if (googleCell.includes('telemost')) {
+									text = `Телемост - ${teleCou++}`
+								} else if (googleCell.includes('mts-link')) {
+									text = `МТС-Линк - ${MTSCou++}`
+								} else if (googleCell.includes('yandex.ru/chat')) {
+									text = `Яндекс Чат - ${chatCou++}`
+								} else if (googleCell.includes('yandex.ru/event')) {
+									text = `Яндекс Календарь - ${calendarCou++}`
+								} else if (googleCell.includes('discord')) {
+									text = `Discord - ${discordCou++}`
+								} else if (googleCell.includes('zoom')) {
+									text = `Zoom - ${zoomCou++}`
+								} else {
+									text = `Материалы - ${matCou++}`
+								}
+
+								googleCell = `<a href= '${link}' > ${text} </a>`
+							}
+							if (googleCell == '') {
+								googleCell = '\n\n'
+							}
+
+							lectionsForToday += googleCell
+						}
+						//	lectionsForToday += googleString[groupIndex]
 						lectionsForToday = lectionsForToday.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
 						lectionsForToday = lectionsForToday.replace(/Ссылка на трансляцию для зрителей:/gi, '')
 					}
@@ -118,7 +143,9 @@ let checkCommands = function (msg, group) {
 			lectionsForToday = '🥳 Сегодня пар нет'
 		}
 		bot.sendMessage(chatId, lectionsForToday, {
+			parse_mode: 'HTML',
 			disable_web_page_preview: true
+
 		})
 	}
 
@@ -136,26 +163,59 @@ let checkCommands = function (msg, group) {
 			let nowWeekDay = googleString[0];
 			if (googleString[groupIndex] != null) {
 				if (googleString[groupIndex].includes('Описание пары:')) {
-
+					let teleCou = 1
+					let MTSCou = 1
+					let chatCou = 1
+					let calendarCou = 1
+					let discordCou = 1
+					let zoomCou = 1
+					let matCou = 1
 
 					if (nowWeekDay != tempWeekDay) {
 						lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n\n`
 						tempWeekDay = nowWeekDay
 					}
 					lectionsForWeek += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
-					googleString[groupIndex].split('Ссылка на консультацию:').map(el => {
-						if (el.includes('Ссылка на видеовстресу')) {
-							el.split('Ссылка на видеовстресу для организатора и участников:').map(el1 => {
-								el1.split('Ссылка на трансляцию для зрителей:').map(el2 => {
-									lectionsForWeek += el2
-								})
-							})
-						} else {
-							lectionsForWeek += el + '\n'
-						}
-					})
-					lectionsForWeek += '\n'
+					googleString[groupIndex] = googleString[groupIndex].split('\n')
+					for (googleCell of googleString[groupIndex]) {
 
+						let link = googleCell
+						let text = ''
+
+						if (googleCell.includes('https://')) {
+							if (googleCell.includes('telemost')) {
+								text = `Телемост - ${teleCou++}`
+							} else if (googleCell.includes('mts-link')) {
+								text = `МТС-Линк - ${MTSCou++}`
+							} else if (googleCell.includes('yandex.ru/chat')) {
+								text = `Яндекс Чат - ${chatCou++}`
+							} else if (googleCell.includes('yandex.ru/event')) {
+								text = `Яндекс Календарь - ${calendarCou++}`
+							} else if (googleCell.includes('discord')) {
+								text = `Discord - ${discordCou++}`
+							} else if (googleCell.includes('zoom')) {
+								text = `Zoom - ${zoomCou++}`
+							} else {
+								text = `Материалы - ${matCou++}`
+							}
+
+							googleCell = `<a href= '${link}' > ${text} </a>\n`
+						}
+						if (googleCell == '') {
+							googleCell = '\n\n'
+						}
+
+						lectionsForWeek += googleCell
+					}
+
+
+
+					//lectionsForWeek += googleString[groupIndex]
+
+					lectionsForWeek = lectionsForWeek.replace(/Ссылка на консультацию:/gi, '')
+					lectionsForWeek = lectionsForWeek.replace(/Ссылка на консультацию: /gi, '')
+					lectionsForWeek = lectionsForWeek.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
+					lectionsForWeek = lectionsForWeek.replace(/Ссылка на трансляцию для зрителей:/gi, '')
 				}
 			}
 		})
@@ -420,7 +480,7 @@ async function checkDayAndTime() {
 				for (let gIndex = 0; gIndex < googleString.length; gIndex++) {
 					if (googleString[gIndex] != null) {
 						if (googleString[gIndex].includes('Описание пары')) {
-							let tempGroup = listsOfData[course][0][gIndex]
+							let tempGroup = listOfData[0][gIndex]
 							if (!(whichGroupNeedSchedule.includes(tempGroup))) {
 								whichGroupNeedSchedule.push(tempGroup)
 								for (let groupsFromBD of whoNeedSchedule) {
