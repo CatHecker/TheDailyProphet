@@ -73,12 +73,26 @@ let checkCommands = function (msg, group) {
 			const groupValues1 = [chatId];
 
 			try {
-				connection.execute(sql1, groupValues1);
-				bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
-					reply_markup: {
-						remove_keyboard: true
+				pool.getConnection(function (err, connection) {
+					if (err) {
+						console.error("Ошибка подключения SQL: " + err.message);
+						return;
+					} else {
+						connection.execute(sql1, groupValues1, (err, res) => {
+							connection.release()
+							if (err) {
+								console.error("Ошибка удаления строчки SQL: " + err.message);
+								return;
+							}
+						});
+						bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
+							reply_markup: {
+								remove_keyboard: true
+							}
+						});
 					}
-				});
+				})
+
 			} catch (err) {
 				console.error('Ошибка при обновлении группы:', err);
 			}
@@ -340,18 +354,25 @@ bot.on('callback_query', query => {
 	whoNeedSchedule.map(el => {
 		if (el.chat_id == query.message.chat.id) {
 			el.notifications = !el.notifications
-			connection.execute("UPDATE dailyProphet SET notifications = ? WHERE chat_id = ?", [el.notifications, el.chat_id], function (err, res) {
+			pool.getConnection(function (err, connection) {
 				if (err) {
-					console.error(err)
-				} else {
-					let noteMessage = '✅ Теперь уведомления '
-					if (el.notifications) {
-						noteMessage += 'включены'
-					} else {
-						noteMessage += 'отключены'
-					}
-					bot.sendMessage(el.chat_id, noteMessage)
+					console.error("Ошибка подключения SQL: " + err.message);
+					return;
 				}
+				connection.execute("UPDATE dailyProphet SET notifications = ? WHERE chat_id = ?", [el.notifications, el.chat_id], function (err, res) {
+					connection.release()
+					if (err) {
+						console.error(err)
+					} else {
+						let noteMessage = '✅ Теперь уведомления '
+						if (el.notifications) {
+							noteMessage += 'включены'
+						} else {
+							noteMessage += 'отключены'
+						}
+						bot.sendMessage(el.chat_id, noteMessage)
+					}
+				})
 			})
 			//UPDATE goods SET price = 150 WHERE num = 2
 		}
@@ -361,34 +382,35 @@ googleSheetsUpdate()
 // #####################      MySQL       #######################
 const mysql = require("mysql2");
 
-const connection = mysql.createConnection({
+const pool = mysql.createPool({
 	host: "sql7.freemysqlhosting.net",
 	user: "sql7730644",
 	database: "sql7730644",
 	password: "AQwxLL9Qi6"
 });
 let sqlConnect = () => {
-	connection.connect(function (err) {
+	pool.getConnection(function (err, connection) {
 		if (err) {
 			return console.error("Ошибка подключения SQL: " + err.message);
-		} else {
-			connection.execute("SELECT * FROM dailyProphet", function (err, res) {
-				if (err) {
-					console.error(err)
-				} else {
-					res.map(el => {
-						let course = 4 - Number(el.choosen_group[3])
-						listsOfData[course][0].map(groupFirstStr => {
-							if (el.choosen_group == groupFirstStr) {
-								whoNeedSchedule.push(el)
-							}
-						})
-					})
-					console.log("Подключение к серверу MySQL успешно установлено");
-					onListener()
-				}
-			})
 		}
+		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
+			connection.release()
+			if (err) {
+				console.error(err)
+			} else {
+				res.map(el => {
+					let course = 4 - Number(el.choosen_group[3])
+					listsOfData[course][0].map(groupFirstStr => {
+						if (el.choosen_group == groupFirstStr) {
+							whoNeedSchedule.push(el)
+						}
+					})
+				})
+				console.log("Подключение к серверу MySQL успешно установлено");
+				onListener()
+			}
+		})
+
 	});
 }
 
@@ -397,23 +419,31 @@ let sqlConnect = () => {
 let checkGroup = function (msg, choosenGroup) {
 	let chatId = msg.chat.id
 	let groupFinded = false
-	connection.execute("SELECT * FROM dailyProphet", function (err, res) {
+	pool.getConnection(function (err, connection) {
 		if (err) {
-			console.log(err)
-		} else {
-			res.map(el => {
-				if (el.chat_id == chatId) {
-					choosenGroup = el.choosen_group;
-					groupFinded = true
-					return
-				}
-			})
-			if (groupFinded == false) {
-				return addId(msg, choosenGroup)
-			}
-			checkCommands(msg, choosenGroup)
+			console.error("Ошибка подключения SQL: " + err.message);
+			return;
 		}
+		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
+			connection.release()
+			if (err) {
+				console.log(err)
+			} else {
+				res.map(el => {
+					if (el.chat_id == chatId) {
+						choosenGroup = el.choosen_group;
+						groupFinded = true
+						return
+					}
+				})
+				if (groupFinded == false) {
+					return addId(msg, choosenGroup)
+				}
+				checkCommands(msg, choosenGroup)
+			}
+		})
 	})
+
 }
 
 // Добавление id в бд
@@ -437,10 +467,17 @@ let addId = function (msg, choosenGroup) {
 					choosen_group: choosenGroup,
 					notifications: 1
 				})
-				connection.execute(sql, groupValues, function (err, res) {
+				pool.getConnection(function (err, connection) {
 					if (err) {
-						console.log(err);
+						console.error("Ошибка подключения SQL: " + err.message);
+						return;
 					}
+					connection.execute(sql, groupValues, function (err, res) {
+						connection.release()
+						if (err) {
+							console.log(err);
+						}
+					})
 				})
 				bot.sendMessage(chatId, `✅ Группа записана: ${text}`, {
 					reply_markup: {
