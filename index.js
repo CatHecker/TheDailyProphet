@@ -49,7 +49,7 @@ let checkCommands = function (msg, group) {
 
 📅 Здесь ты можешь найти расписание своей группы 
 
-🔍 Чтобы начать введи номер группы (например: 01-001)
+🔍 Чтобы начать введи номер группы (например: 09-101)
 		`
 		bot.sendMessage(chatId, startMessage, {
 			parse_mode: 'HTML'
@@ -74,83 +74,107 @@ let checkCommands = function (msg, group) {
 
 			try {
 				connection.execute(sql1, groupValues1);
-				bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`);
+				bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
+					reply_markup: {
+						remove_keyboard: true
+					}
+				});
 			} catch (err) {
 				console.error('Ошибка при обновлении группы:', err);
 			}
 			return;
 		}
 	}
-	if (text == 'Расписание на сегодня' && group !== '') {
+	let linkDestroyer = (lections, googleString, groupIndex) => {
+		let platforms = [1, 1, 1, 1, 1, 1, 1]
+		lections += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
+		let strCell = googleString[groupIndex]
+		googleString[groupIndex] = googleString[groupIndex].split('\n')
+		for (googleCell of googleString[groupIndex]) {
+			let link = googleCell
+			let textOfLink = ''
+			if (googleCell.includes('https://')) {
+				if (googleCell.includes('telemost')) {
+					textOfLink = `Телемост - ${platforms[0]++}`
+				} else if (googleCell.includes('mts-link')) {
+					textOfLink = `МТС-Линк - ${platforms[1]++}`
+				} else if (googleCell.includes('yandex.ru/chat')) {
+					textOfLink = `Яндекс Чат - ${platforms[2]++}`
+				} else if (googleCell.includes('yandex.ru/event')) {
+					textOfLink = `Яндекс Календарь - ${platforms[3]++}`
+				} else if (googleCell.includes('discord')) {
+					textOfLink = `Discord - ${platforms[4]++}`
+				} else if (googleCell.includes('zoom')) {
+					textOfLink = `Zoom - ${platforms[5]++}`
+				} else {
+					textOfLink = `Материалы - ${platforms[6]++}`
+				}
+				googleCell = `<a href= '${link}' > ${textOfLink} </a>\n`
+			}
+			if (googleCell == '') {
+				lections += '\n\n'
+			}
+
+			lections += googleCell
+		}
+
+		lections = lections.replace(/Ссылка на консультацию:/gi, '')
+		lections = lections.replace(/Ссылка на консультацию: /gi, '')
+		lections = lections.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
+		lections = lections.replace(/Ссылка на трансляцию для зрителей:/gi, '')
+
+		googleString[groupIndex] = strCell
+		return lections
+	}
+	//schedule for today
+	if ((text == 'На сегодня' || text == 'На завтра') && group !== '') {
 		let groupIndex = listsOfData[course][0].indexOf(group)
 		let time1 = new Date()
 		let offset1 = time1.getTimezoneOffset() + 180
 		let time2 = new Date(new Date() - 0 + offset1 * 60 * 1000 + 1000 * 60 * 10)
 		let day = time2.getDay();
+		if (text.includes('завтра')) {
+			day++
+		}
 		let lectionsForToday = `Расписание на сегодня: \n\n`
 		listsOfData[course].map(googleString => {
-			if (day == googleString[0]) {
-				if (googleString[groupIndex] != null) {
-					if (googleString[groupIndex].includes('Описание пары:')) {
-						lectionsForToday += `\n⏰ ${googleString[1]}-${googleString[2]}\n\n`
-						googleString[groupIndex] = googleString[groupIndex].split('\n')
-
-						let teleCou = 1
-						let MTSCou = 1
-						let chatCou = 1
-						let calendarCou = 1
-						let discordCou = 1
-						let zoomCou = 1
-						let matCou = 1
-						for (googleCell of googleString[groupIndex]) {
-							let link = googleCell
-							let text = ''
-
-							if (googleCell.includes('https://')) {
-								// telemost, mts, yandex chat, yandex calendar, discord, zoom, materials
-								if (googleCell.includes('telemost')) {
-									text = `Телемост - ${teleCou++}`
-								} else if (googleCell.includes('mts-link')) {
-									text = `МТС-Линк - ${MTSCou++}`
-								} else if (googleCell.includes('yandex.ru/chat')) {
-									text = `Яндекс Чат - ${chatCou++}`
-								} else if (googleCell.includes('yandex.ru/event')) {
-									text = `Яндекс Календарь - ${calendarCou++}`
-								} else if (googleCell.includes('discord')) {
-									text = `Discord - ${discordCou++}`
-								} else if (googleCell.includes('zoom')) {
-									text = `Zoom - ${zoomCou++}`
-								} else {
-									text = `Материалы - ${matCou++}`
-								}
-
-								googleCell = `<a href= '${link}' > ${text} </a>`
-							}
-							if (googleCell == '') {
-								googleCell = '\n\n'
-							}
-
-							lectionsForToday += googleCell
-						}
-						//	lectionsForToday += googleString[groupIndex]
-						lectionsForToday = lectionsForToday.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
-						lectionsForToday = lectionsForToday.replace(/Ссылка на трансляцию для зрителей:/gi, '')
-					}
-				}
+			if (day == googleString[0] && googleString[groupIndex] != null && googleString[groupIndex].includes('Описание пары:')) {
+				lectionsForToday = linkDestroyer(lectionsForToday, googleString, groupIndex)
 			}
 		})
 		if (lectionsForToday == `Расписание на сегодня: \n\n`) {
-			lectionsForToday = '🥳 Сегодня пар нет'
+			if (text.includes('завтра')) {
+				lectionsForToday = '🥳 Завтра пар нет'
+			} else {
+				lectionsForToday = '🥳 Сегодня пар нет'
+			}
 		}
 		bot.sendMessage(chatId, lectionsForToday, {
 			parse_mode: 'HTML',
 			disable_web_page_preview: true
-
 		})
 	}
+	// schedule for week
+	let weekDayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
+	if (weekDayNames.includes(text)) {
+		lectionsFDW = `<b>${text}:</b>\n\n`
+		let groupIndex = listsOfData[course][0].indexOf(group)
+		let day = weekDayNames.indexOf(text) + 1
+		listsOfData[course].map(googleString => {
+			if (day == googleString[0] && googleString[groupIndex] != null && googleString[groupIndex].includes('Описание пары:')) {
+				lectionsFDW = linkDestroyer(lectionsFDW, googleString, groupIndex)
+			}
+		})
+		if (lectionsFDW == `<b>${text}:</b>\n\n`) {
+			lectionsFDW = 'В этот день пар нет 🥳'
+		}
+		bot.sendMessage(chatId, lectionsFDW, {
+			parse_mode: 'HTML',
+			disable_web_page_preview: true
+		})
+	}
+	if (text == 'На неделю' && group !== '') {
 
-	if (text == 'Расписание на неделю' && group !== '') {
-		let weekDayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 		let tempWeekDay = 1
 		let groupIndex = listsOfData[course][0].indexOf(group)
 		let lectionsForWeek = `
@@ -161,62 +185,12 @@ let checkCommands = function (msg, group) {
 `
 		listsOfData[course].map(googleString => {
 			let nowWeekDay = googleString[0];
-			if (googleString[groupIndex] != null) {
-				if (googleString[groupIndex].includes('Описание пары:')) {
-					let teleCou = 1
-					let MTSCou = 1
-					let chatCou = 1
-					let calendarCou = 1
-					let discordCou = 1
-					let zoomCou = 1
-					let matCou = 1
-
-					if (nowWeekDay != tempWeekDay) {
-						lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n\n`
-						tempWeekDay = nowWeekDay
-					}
-					lectionsForWeek += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
-					googleString[groupIndex] = googleString[groupIndex].split('\n')
-					for (googleCell of googleString[groupIndex]) {
-
-						let link = googleCell
-						let text = ''
-
-						if (googleCell.includes('https://')) {
-							if (googleCell.includes('telemost')) {
-								text = `Телемост - ${teleCou++}`
-							} else if (googleCell.includes('mts-link')) {
-								text = `МТС-Линк - ${MTSCou++}`
-							} else if (googleCell.includes('yandex.ru/chat')) {
-								text = `Яндекс Чат - ${chatCou++}`
-							} else if (googleCell.includes('yandex.ru/event')) {
-								text = `Яндекс Календарь - ${calendarCou++}`
-							} else if (googleCell.includes('discord')) {
-								text = `Discord - ${discordCou++}`
-							} else if (googleCell.includes('zoom')) {
-								text = `Zoom - ${zoomCou++}`
-							} else {
-								text = `Материалы - ${matCou++}`
-							}
-
-							googleCell = `<a href= '${link}' > ${text} </a>\n`
-						}
-						if (googleCell == '') {
-							googleCell = '\n\n'
-						}
-
-						lectionsForWeek += googleCell
-					}
-
-
-
-					//lectionsForWeek += googleString[groupIndex]
-
-					lectionsForWeek = lectionsForWeek.replace(/Ссылка на консультацию:/gi, '')
-					lectionsForWeek = lectionsForWeek.replace(/Ссылка на консультацию: /gi, '')
-					lectionsForWeek = lectionsForWeek.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
-					lectionsForWeek = lectionsForWeek.replace(/Ссылка на трансляцию для зрителей:/gi, '')
+			if (googleString[groupIndex] != null && googleString[groupIndex].includes('Описание пары:')) {
+				if (nowWeekDay != tempWeekDay) {
+					lectionsForWeek += `\n<b>${weekDayNames[nowWeekDay-1]}</b>\n\n`
+					tempWeekDay = nowWeekDay
 				}
+				lectionsForWeek = linkDestroyer(lectionsForWeek, googleString, groupIndex)
 			}
 		})
 		bot.sendMessage(chatId, lectionsForWeek, {
@@ -224,17 +198,37 @@ let checkCommands = function (msg, group) {
 			disable_web_page_preview: true
 		})
 	}
-
-	if (text == 'Информация' && group != '') {
+	// Информация
+	let noti = 'отключены'
+	let inlineBut = 'Включить'
+	if (text == 'Инфо' && group != '') {
+		for (let id of whoNeedSchedule) {
+			if (id.chat_id == chatId) {
+				if (id.notifications) {
+					noti = 'включены'
+					inlineBut = 'Отключить'
+				}
+			}
+		}
 		bot.sendMessage(chatId, `
 Вы выбрали группу: ${group}
+
+Уведомления о консультациях: ${noti}
 
 Если вы нашли баг или у вас есть идея по улучшению бота пишите нам ⬇️
 
 🧑‍💻 Разработчики: <a href='t.me/chud0kot'>ChudoKOT</a>, <a href='t.me/iWanderling'>Никита Слывка</a>
 `, {
 			parse_mode: 'HTML',
-			disable_web_page_preview: true
+			disable_web_page_preview: true,
+			reply_markup: {
+				inline_keyboard: [
+					[{
+						text: `${inlineBut} уведомления`,
+						callback_data: `1`
+					}]
+				]
+			}
 		})
 	}
 }
@@ -247,8 +241,6 @@ const {
 function NodeGoogleSheets(keyMass, fun) {
 	const auth = new google.auth.GoogleAuth({
 		//keyFile: "./google_file.json",
-
-
 		credentials: {
 			type: "service_account",
 			project_id: process.env.GOOGLE_PROJECT_ID,
@@ -312,23 +304,6 @@ function NodeGoogleSheets(keyMass, fun) {
 		}
 	})();
 }
-// #####################      MySQL       #######################
-const mysql = require("mysql2");
-
-const connection = mysql.createConnection({
-	host: "sql7.freemysqlhosting.net",
-	user: "sql7730644",
-	database: "sql7730644",
-	password: "AQwxLL9Qi6"
-});
-
-connection.connect(function (err) {
-	if (err) {
-		return console.error("Ошибка: " + err.message);
-	} else {
-		console.log("Подключение к серверу MySQL успешно установлено");
-	}
-});
 
 // google sheets fn
 
@@ -340,7 +315,6 @@ let listsOfData = [
 	['']
 ]
 let firstUpdateGoogle = 1
-//let listOfData1 = ['']
 let counterOfConnection = 0
 let googleSheetsUpdate = function () {
 	for (let i = 1; i < 5; i++) {
@@ -348,34 +322,76 @@ let googleSheetsUpdate = function () {
 			values: `Курс ${i}`
 		}, (data) => {
 			let listOfData = data.data.values;
-			connection.execute("SELECT * FROM dailyProphet", function (err, res) {
-				if (err) {
-					console.log(err)
-				} else {
-					counterOfConnection++
-					if (firstUpdateGoogle && counterOfConnection == 4) {
-						onListener()
-						res.map(el => {
-							listOfData[0].map(groupFirstStr => {
-								if (el.choosen_group == groupFirstStr) {
-									whoNeedSchedule.push(el)
-								}
-							})
-
-						})
-						console.log('Google sheets подключены')
-						firstUpdateGoogle = 0
-					}
-
-				}
-				listsOfData[i - 1] = listOfData
-			})
-
+			if (firstUpdateGoogle) {
+				counterOfConnection++
+			}
+			if (counterOfConnection == 4) {
+				firstUpdateGoogle = 0
+				counterOfConnection = 0
+				console.log('Google sheets подключены')
+				sqlConnect()
+			}
+			listsOfData[i - 1] = listOfData
 		})
 	}
 
 }
+bot.on('callback_query', query => {
+	whoNeedSchedule.map(el => {
+		if (el.chat_id == query.message.chat.id) {
+			el.notifications = !el.notifications
+			connection.execute("UPDATE dailyProphet SET notifications = ? WHERE chat_id = ?", [el.notifications, el.chat_id], function (err, res) {
+				if (err) {
+					console.error(err)
+				} else {
+					let noteMessage = '✅ Теперь уведомления '
+					if (el.notifications) {
+						noteMessage += 'включены'
+					} else {
+						noteMessage += 'отключены'
+					}
+					bot.sendMessage(el.chat_id, noteMessage)
+				}
+			})
+			//UPDATE goods SET price = 150 WHERE num = 2
+		}
+	})
+})
 googleSheetsUpdate()
+// #####################      MySQL       #######################
+const mysql = require("mysql2");
+
+const connection = mysql.createConnection({
+	host: "sql7.freemysqlhosting.net",
+	user: "sql7730644",
+	database: "sql7730644",
+	password: "AQwxLL9Qi6"
+});
+let sqlConnect = () => {
+	connection.connect(function (err) {
+		if (err) {
+			return console.error("Ошибка подключения SQL: " + err.message);
+		} else {
+			connection.execute("SELECT * FROM dailyProphet", function (err, res) {
+				if (err) {
+					console.error(err)
+				} else {
+					res.map(el => {
+						let course = 4 - Number(el.choosen_group[3])
+						listsOfData[course][0].map(groupFirstStr => {
+							if (el.choosen_group == groupFirstStr) {
+								whoNeedSchedule.push(el)
+							}
+						})
+					})
+					console.log("Подключение к серверу MySQL успешно установлено");
+					onListener()
+				}
+			})
+		}
+	});
+}
+
 
 // check group fn
 let checkGroup = function (msg, choosenGroup) {
@@ -414,11 +430,12 @@ let addId = function (msg, choosenGroup) {
 			if (text == el) {
 				choosenGroup = String(text);
 				checkCommands(msg, choosenGroup)
-				const sql = "INSERT INTO dailyProphet VALUES (?, ?)";
+				const sql = "INSERT INTO dailyProphet VALUES (?, ?, 1)";
 				const groupValues = [chatId, choosenGroup]
 				whoNeedSchedule.push({
 					chat_id: chatId,
-					choosen_group: choosenGroup
+					choosen_group: choosenGroup,
+					notifications: 1
 				})
 				connection.execute(sql, groupValues, function (err, res) {
 					if (err) {
@@ -428,9 +445,10 @@ let addId = function (msg, choosenGroup) {
 				bot.sendMessage(chatId, `✅ Группа записана: ${text}`, {
 					reply_markup: {
 						keyboard: [
-							['Расписание на сегодня'],
-							["Расписание на неделю"],
-							['Информация']
+							['Понедельник', "Четверг"],
+							['Вторник', "Пятница"],
+							["Среда", "Суббота"],
+							["На неделю", 'На сегодня', 'На завтра', 'Инфо']
 						]
 					}
 				})
@@ -438,18 +456,23 @@ let addId = function (msg, choosenGroup) {
 		})
 	})
 	if (choosenGroup == '') {
-		let justListOfCommandsVersions = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot', 'Информация', '/change', 'change', '/change@DailyProphetKpfuBot', 'change@DailyProphetKpfuBot']
+		let justStartComms = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot']
+		let justListOfCommandsVersions = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot', 'Информация', 'Инфо', '/change', 'change', '/change@DailyProphetKpfuBot', 'change@DailyProphetKpfuBot']
 		if (choosenGroup == '' && (!(justListOfCommandsVersions.includes(text)))) {
 			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
+		}
+		if (justStartComms.includes(text)) {
+			checkCommands(msg, choosenGroup)
 		}
 	}
 
 }
+// button onclick
 
 // listener сoобщений
 let onListener = () => {
 	bot.on('message', async msg => {
-		googleSheetsUpdate()
+		//googleSheetsUpdate()
 		let choosenGroup = ''
 		const chatId = msg.chat.id
 		for (bdString of whoNeedSchedule) {
@@ -467,7 +490,6 @@ let onListener = () => {
 
 // new check time function with parser
 async function checkDayAndTime() {
-
 	let newestTime = new Date()
 	let offset = newestTime.getTimezoneOffset() + 180
 	let now = new Date(new Date() - 0 + offset * 60 * 1000 + 1000 * 60 * 10)
@@ -484,7 +506,7 @@ async function checkDayAndTime() {
 							if (!(whichGroupNeedSchedule.includes(tempGroup))) {
 								whichGroupNeedSchedule.push(tempGroup)
 								for (let groupsFromBD of whoNeedSchedule) {
-									if (groupsFromBD.choosen_group == tempGroup) {
+									if (groupsFromBD.choosen_group == tempGroup && groupsFromBD.notifications == 1) {
 										let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
 										reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
 										bot.sendMessage(groupsFromBD.chat_id, reminderTxt)
