@@ -75,7 +75,7 @@ let checkCommands = function (msg, group) {
 			try {
 				pool.getConnection(function (err, connection) {
 					if (err) {
-						console.error("Ошибка подключения SQL: " + err.message);
+						console.error("Ошибка подключения SQL(для удаления строки): " + err.message);
 						return;
 					} else {
 						connection.execute(sql1, groupValues1, (err, res) => {
@@ -94,7 +94,7 @@ let checkCommands = function (msg, group) {
 				})
 
 			} catch (err) {
-				console.error('Ошибка при обновлении группы:', err);
+				console.error('Ошибка при удалении группы:', err);
 			}
 			return;
 		}
@@ -355,13 +355,13 @@ bot.on('callback_query', query => {
 			el.notifications = !el.notifications
 			pool.getConnection(function (err, connection) {
 				if (err) {
-					console.error("Ошибка подключения SQL: " + err.message);
+					console.error("Ошибка подключения SQL(для обновления уведомлений): " + err.message);
 					return;
 				}
 				connection.execute("UPDATE dailyProphet SET notifications = ? WHERE chat_id = ?", [el.notifications, el.chat_id], function (err, res) {
 					connection.release()
 					if (err) {
-						console.error(err)
+						console.error('Ошибка при обновлении уведомлений SQL:' + err.message)
 					} else {
 						let noteMessage = '✅ Теперь уведомления '
 						if (el.notifications) {
@@ -396,7 +396,7 @@ let sqlConnect = () => {
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
 			connection.release()
 			if (err) {
-				console.error(err)
+				console.error("Ошибка обновления уведомлений SQL:" + err.message)
 			} else {
 				whoNeedSchedule = []
 				res.map(el => {
@@ -426,26 +426,26 @@ let checkGroup = function (msg, choosenGroup) {
 	let groupFinded = false
 	pool.getConnection(function (err, connection) {
 		if (err) {
-			console.error("Ошибка подключения SQL: " + err.message);
+			console.error("Ошибка подключения SQL(для проверки группы): " + err.message);
 			return;
 		}
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
 			connection.release()
 			if (err) {
-				console.log(err)
-			} else {
-				res.map(el => {
-					if (el.chat_id == chatId) {
-						choosenGroup = el.choosen_group;
-						groupFinded = true
-						return
-					}
-				})
-				if (groupFinded == false) {
-					return addId(msg, choosenGroup)
-				}
-				checkCommands(msg, choosenGroup)
+				return console.error("Ошибка проверки группы в SQL: " + err.message)
 			}
+			res.map(el => {
+				if (el.chat_id == chatId) {
+					choosenGroup = el.choosen_group;
+					groupFinded = true
+					return
+				}
+			})
+			if (groupFinded == false) {
+				return addId(msg, choosenGroup)
+			}
+			checkCommands(msg, choosenGroup)
+
 		})
 	})
 
@@ -474,13 +474,13 @@ let addId = function (msg, choosenGroup) {
 				})
 				pool.getConnection(function (err, connection) {
 					if (err) {
-						console.error("Ошибка подключения SQL: " + err.message);
+						console.error("Ошибка подключения SQL(при добавлении группы): " + err.message);
 						return;
 					}
 					connection.execute(sql, groupValues, function (err, res) {
 						connection.release()
 						if (err) {
-							console.log(err);
+							console.error("Ошибка добавления группы в SQL: " + err.message);
 						}
 					})
 				})
@@ -519,7 +519,7 @@ let onListener = () => {
 		for (bdString of whoNeedSchedule) {
 			if (bdString.chat_id == chatId) {
 				choosenGroup = bdString.choosen_group
-				console.log(bdString, msg.text, ' от: ',msg.from.first_name)
+				console.log(bdString, msg.text, ' от: ', msg.from.first_name)
 			}
 		}
 		if (choosenGroup == '') {
