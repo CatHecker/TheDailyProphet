@@ -348,7 +348,6 @@ let googleSheetsUpdate = function () {
 			listsOfData[i - 1] = listOfData
 		})
 	}
-
 }
 bot.on('callback_query', query => {
 	whoNeedSchedule.map(el => {
@@ -388,6 +387,7 @@ const pool = mysql.createPool({
 	database: "sql7730644",
 	password: "AQwxLL9Qi6"
 });
+let firstSqlConnect = 1
 let sqlConnect = () => {
 	pool.getConnection(function (err, connection) {
 		if (err) {
@@ -398,6 +398,7 @@ let sqlConnect = () => {
 			if (err) {
 				console.error(err)
 			} else {
+				whoNeedSchedule = []
 				res.map(el => {
 					let course = 4 - Number(el.choosen_group[3])
 					listsOfData[course][0].map(groupFirstStr => {
@@ -406,8 +407,12 @@ let sqlConnect = () => {
 						}
 					})
 				})
-				console.log("Подключение к серверу MySQL успешно установлено");
-				onListener()
+				if (firstSqlConnect == 1) {
+					onListener()
+					firstSqlConnect = 0
+					console.log("Подключение к серверу MySQL успешно установлено");
+				}
+
 			}
 		})
 
@@ -509,12 +514,12 @@ let addId = function (msg, choosenGroup) {
 // listener сoобщений
 let onListener = () => {
 	bot.on('message', async msg => {
-		//googleSheetsUpdate()
 		let choosenGroup = ''
 		const chatId = msg.chat.id
 		for (bdString of whoNeedSchedule) {
 			if (bdString.chat_id == chatId) {
 				choosenGroup = bdString.choosen_group
+				console.log(bdString, msg.text, ' от: ',msg.from.first_name)
 			}
 		}
 		if (choosenGroup == '') {
@@ -563,4 +568,5 @@ setInterval(checkDayAndTime, 60000);
 setInterval(() => {
 	fetch('https://thedailyprophet.onrender.com/')
 	googleSheetsUpdate()
+	sqlConnect()
 }, 1000 * 60 * 10)
