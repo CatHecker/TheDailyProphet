@@ -11,12 +11,10 @@ let helloWorld = {
 app.get('/', (req, res) => {
 	res.send(helloWorld);
 });
-
 app.listen(port, () => {
 	console.log(`Server is running on port ${port}`);
 });
 const token = process.env.TELEGRAM_BOT_TOKEN;
-
 const bot = new TelegramApi(token, {
 	polling: true
 })
@@ -27,7 +25,7 @@ bot.setMyCommands([{
 	},
 	{
 		command: '/change',
-		description: 'Поменять свою группу на новую'
+		description: 'Сбросить значение группы'
 	}
 ]).catch((err) => {
 	console.error('Ошибка при установке команд:', err);
@@ -43,7 +41,6 @@ let checkCommands = function (msg, group) {
 		}
 	}
 	if (text === 'start' || text == '/start' || text == '/start@DailyProphetKpfuBot' || text == 'start@DailyProphetKpfuBot') {
-		// а также получить напоминание о следующей консультации
 		const startMessage = `
 <strong>🌟 Добро пожаловать, студент! 🌟</strong>
 
@@ -246,8 +243,7 @@ let checkCommands = function (msg, group) {
 		})
 	}
 }
-/* ФУНКЦИЯ КАКОГО-ТО ТАМ ЮТУБЕРА */
-
+/* Функция подключения google sheets */
 const {
 	google
 } = require("googleapis");
@@ -320,7 +316,6 @@ function NodeGoogleSheets(keyMass, fun) {
 }
 
 // google sheets fn
-
 let whoNeedSchedule = []
 let listsOfData = [
 	[''],
@@ -373,15 +368,15 @@ bot.on('callback_query', query => {
 					}
 				})
 			})
-			//UPDATE goods SET price = 150 WHERE num = 2
 		}
 	})
 })
 googleSheetsUpdate()
-// #####################      MySQL       #######################
+//    MySQL     connection  
 const mysql = require("mysql2");
 
 const pool = mysql.createPool({
+	connectionLimit: 100,
 	host: "sql7.freemysqlhosting.net",
 	user: "sql7730644",
 	database: "sql7730644",
@@ -418,7 +413,6 @@ let sqlConnect = () => {
 
 	});
 }
-
 
 // check group fn
 let checkGroup = function (msg, choosenGroup) {
@@ -507,7 +501,6 @@ let addId = function (msg, choosenGroup) {
 	}
 
 }
-// button onclick
 
 // listener сoобщений
 let onListener = () => {
@@ -528,7 +521,7 @@ let onListener = () => {
 	})
 }
 
-// new check time function with parser
+// check time function
 async function checkDayAndTime() {
 	let newestTime = new Date()
 	let offset = newestTime.getTimezoneOffset() + 180
