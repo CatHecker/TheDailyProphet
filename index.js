@@ -141,7 +141,7 @@ let checkCommands = function (msg, group) {
 		return lections
 	}
 	//schedule for today
-	if ((text == 'На сегодня' || text == 'На завтра') && group !== '') {
+	if ((text == 'На сегодня' || text == 'На завтра' || text == 'Расписание на сегодня') && group !== '') {
 		let groupIndex = listsOfData[course][0].indexOf(group)
 		let time1 = new Date()
 		let offset1 = time1.getTimezoneOffset() + 180
@@ -187,7 +187,7 @@ let checkCommands = function (msg, group) {
 			disable_web_page_preview: true
 		})
 	}
-	if (text == 'На неделю' && group !== '') {
+	if ((text == 'Расписание на неделю' || text == 'На неделю') && group !== '') {
 
 		let tempWeekDay = 1
 		let groupIndex = listsOfData[course][0].indexOf(group)
@@ -396,7 +396,7 @@ let sqlConnect = () => {
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
 			connection.release()
 			if (err) {
-				console.error("Ошибка обновления уведомлений SQL:" + err.message)
+				console.error("Ошибка извлечения данных из БД: " + err.message)
 			} else {
 				whoNeedSchedule = []
 				res.map(el => {
@@ -407,7 +407,7 @@ let sqlConnect = () => {
 						}
 					})
 				})
-				if (firstSqlConnect == 1) {
+				if (firstSqlConnect) {
 					onListener()
 					firstSqlConnect = 0
 					console.log("Подключение к серверу MySQL успешно установлено");
@@ -445,10 +445,8 @@ let checkGroup = function (msg, choosenGroup) {
 				return addId(msg, choosenGroup)
 			}
 			checkCommands(msg, choosenGroup)
-
 		})
 	})
-
 }
 
 // Добавление id в бд
@@ -568,5 +566,4 @@ setInterval(checkDayAndTime, 60000);
 setInterval(() => {
 	fetch('https://thedailyprophet.onrender.com/')
 	googleSheetsUpdate()
-	sqlConnect()
 }, 1000 * 60 * 10)
