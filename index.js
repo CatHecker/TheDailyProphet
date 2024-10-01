@@ -82,11 +82,11 @@ let checkCommands = function (msg, group) {
 								bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 								return;
 							}
-						});
-						bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
-							reply_markup: {
-								remove_keyboard: true
-							}
+							bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
+								reply_markup: {
+									remove_keyboard: true
+								}
+							});
 						});
 					}
 				})
