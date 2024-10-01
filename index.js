@@ -79,6 +79,7 @@ let checkCommands = function (msg, group) {
 							connection.release()
 							if (err) {
 								console.error("Ошибка удаления строчки SQL: " + err.message);
+								bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 								return;
 							}
 						});
@@ -232,25 +233,27 @@ let checkCommands = function (msg, group) {
 		})
 	}
 	// Информация
-	let noti = 'отключены'
+	let noti = '⛔️'
 	let inlineBut = 'Включить'
 	if (text == 'Инфо' && group != '') {
 		for (let id of whoNeedSchedule) {
 			if (id.chat_id == chatId) {
 				if (id.notifications) {
-					noti = 'включены'
+					noti = '✅'
 					inlineBut = 'Отключить'
 				}
 			}
 		}
 		bot.sendMessage(chatId, `
-Вы выбрали группу: ${group}
+👥 Вы выбрали группу: ${group}
 
-Уведомления о консультациях: ${noti}
+🔔 Уведомления о консультациях: ${noti}
 
-Если вы нашли баг или у вас есть идея по улучшению бота пишите нам ⬇️
+✉️ По всем вопросам и предложениям - обращайтесь к нам!
 
 🧑‍💻 Разработчики: <a href='t.me/chud0kot'>ChudoKOT</a>, <a href='t.me/iWanderling'>Никита Слывка</a>
+
+💸 <a href='https://www.tinkoff.ru/rm/akhiyarov.emil1/jomzE2512'>Поддержать бота</a> 
 `, {
 			parse_mode: 'HTML',
 			disable_web_page_preview: true,
@@ -379,6 +382,8 @@ bot.on('callback_query', query => {
 					connection.release()
 					if (err) {
 						console.error('Ошибка при обновлении уведомлений SQL:' + err.message)
+						bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+						return
 					} else {
 						let noteMessage = '✅ Теперь уведомления '
 						if (el.notifications) {
@@ -414,6 +419,8 @@ let sqlConnect = () => {
 			connection.release()
 			if (err) {
 				console.error("Ошибка извлечения данных из БД: " + err.message)
+				bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+				return
 			} else {
 				whoNeedSchedule = []
 				res.map(el => {
@@ -448,6 +455,7 @@ let checkGroup = function (msg, choosenGroup) {
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
 			connection.release()
 			if (err) {
+				bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 				return console.error("Ошибка проверки группы в SQL: " + err.message)
 			}
 			res.map(el => {
@@ -495,6 +503,8 @@ let addId = function (msg, choosenGroup) {
 						connection.release()
 						if (err) {
 							console.error("Ошибка добавления группы в SQL: " + err.message);
+							bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+							return
 						}
 					})
 				})
