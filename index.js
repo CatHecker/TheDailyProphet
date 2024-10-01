@@ -90,6 +90,28 @@ let checkCommands = function (msg, group) {
 					}
 				})
 
+				//Удалить в случае ошибок
+				//
+				// pool.getConnection(function (err, connection) {
+				// 	if (err) {
+				// 		console.error("Ошибка подключения SQL(для проверки запросов): " + err.message);
+				// 		return;
+				// 	} else {
+				// 		connection.execute('SHOW STATUS WHERE variable_name = Threads_connected', (err, res) => {
+				// 			connection.release()
+				// 			if (err) {
+				// 				console.error("Ошибка удаления строчки SQL: " + err.message);
+				// 				return;
+				// 			} else {
+				// 				console.log(res)
+				// 			}
+				// 		});
+				// 	}
+				// })
+
+
+
+
 			} catch (err) {
 				console.error('Ошибка при удалении группы:', err);
 			}
@@ -376,7 +398,7 @@ googleSheetsUpdate()
 const mysql = require("mysql2");
 
 const pool = mysql.createPool({
-	connectionLimit: 100,
+	connectionLimit: 10000,
 	host: "sql7.freemysqlhosting.net",
 	user: "sql7730644",
 	database: "sql7730644",
@@ -509,10 +531,10 @@ let onListener = () => {
 		const chatId = msg.chat.id
 		for (bdString of whoNeedSchedule) {
 			if (bdString.chat_id == chatId) {
-				choosenGroup = bdString.choosen_group
-				console.log(bdString, msg.text, ' от: ', msg.from.first_name)
+				choosenGroup = bdString.choosen_group				
 			}
 		}
+		console.log(choosenGroup, msg.text, ' от: ', msg.from.first_name)
 		if (choosenGroup == '') {
 			checkGroup(msg, choosenGroup)
 		} else {
