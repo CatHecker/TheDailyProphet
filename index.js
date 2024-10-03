@@ -41,13 +41,15 @@ let checkCommands = function (msg, group) {
 		}
 	}
 	if (text === 'start' || text == '/start' || text == '/start@DailyProphetKpfuBot' || text == 'start@DailyProphetKpfuBot') {
-		const startMessage = `
+		let startMessage = `
 <strong>🌟 Добро пожаловать, студент! 🌟</strong>
 
 📅 Здесь ты можешь найти расписание своей группы 
 
-🔍 Чтобы начать введи номер группы (например: 09-101)
-		`
+`
+		if (group == '') {
+			startMessage += `🔍 Чтобы начать введи номер группы (например: 09-101)`
+		}
 		bot.sendMessage(chatId, startMessage, {
 			parse_mode: 'HTML'
 		})
@@ -65,57 +67,28 @@ let checkCommands = function (msg, group) {
 				}
 			}
 			group = ''
-
 			const sql1 = "DELETE FROM dailyProphet WHERE chat_id = ?";
 			const groupValues1 = [chatId];
-
-			try {
-				pool.getConnection(function (err, connection) {
-					if (err) {
-						console.error("Ошибка подключения SQL(для удаления строки): " + err.message);
-						return;
-					} else {
-						connection.execute(sql1, groupValues1, (err, res) => {
-							connection.release()
-							if (err) {
-								console.error("Ошибка удаления строчки SQL: " + err.message);
-								bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
-								return;
+			pool.getConnection(function (err, connection) {
+				if (err) {
+					console.error("Ошибка подключения SQL(для удаления строки): " + err.message);
+					return;
+				} else {
+					connection.execute(sql1, groupValues1, (err, res) => {
+						connection.release()
+						if (err) {
+							console.error("Ошибка удаления строчки SQL: " + err.message);
+							bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+							return;
+						}
+						bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
+							reply_markup: {
+								remove_keyboard: true
 							}
-							bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
-								reply_markup: {
-									remove_keyboard: true
-								}
-							});
 						});
-					}
-				})
-
-				//Удалить в случае ошибок
-				//
-				// pool.getConnection(function (err, connection) {
-				// 	if (err) {
-				// 		console.error("Ошибка подключения SQL(для проверки запросов): " + err.message);
-				// 		return;
-				// 	} else {
-				// 		connection.execute('SHOW STATUS WHERE variable_name = Threads_connected', (err, res) => {
-				// 			connection.release()
-				// 			if (err) {
-				// 				console.error("Ошибка удаления строчки SQL: " + err.message);
-				// 				return;
-				// 			} else {
-				// 				console.log(res)
-				// 			}
-				// 		});
-				// 	}
-				// })
-
-
-
-
-			} catch (err) {
-				console.error('Ошибка при удалении группы:', err);
-			}
+					});
+				}
+			})
 			return;
 		}
 	}
@@ -148,10 +121,8 @@ let checkCommands = function (msg, group) {
 			if (googleCell == '') {
 				lections += '\n\n'
 			}
-
 			lections += googleCell
 		}
-
 		lections = lections.replace(/Ссылка на консультацию:/gi, '')
 		lections = lections.replace(/Ссылка на консультацию: /gi, '')
 		lections = lections.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
@@ -267,6 +238,45 @@ let checkCommands = function (msg, group) {
 			}
 		})
 	}
+	let localCourse = 4 - Number(text[3])
+	if (text.substring(0, 3) == '09-' && text != group) {
+		let groupFinded = false
+		listsOfData[localCourse][0].map(bdGroup => {
+
+			if (text == bdGroup) {
+				groupFinded = true
+				group = String(text);
+				whoNeedSchedule.map(el => {
+					if (el.chat_id == chatId) {
+						el.choosen_group = text
+					}
+				})
+				pool.getConnection(function (err, connection) {
+					if (err) {
+						console.error("Ошибка подключения SQL(для обновления группы): " + err.message);
+						return;
+					}
+					connection.execute("UPDATE dailyProphet SET choosen_group = ? WHERE chat_id = ?", [text, chatId], function (err, res) {
+						connection.release()
+						if (err) {
+							console.error('Ошибка при обновлении группы SQL:' + err.message)
+							bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+							return
+						} else {
+							let noteMessage = `✅ Группа записана: ${text}`
+							bot.sendMessage(chatId, noteMessage)
+						}
+					})
+				})
+			}
+		})
+		if (!groupFinded) {
+			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
+		}
+	} else if (text == group) {
+		bot.sendMessage(chatId, '❗ Вы уже выбрали эту группу ❗')
+	}
+
 }
 /* Функция подключения google sheets */
 const {
@@ -399,11 +409,12 @@ bot.on('callback_query', query => {
 	})
 })
 googleSheetsUpdate()
+
 //    MySQL     connection  
 const mysql = require("mysql2");
 
 const pool = mysql.createPool({
-	connectionLimit: 10000,
+	connectionLimit: 100,
 	host: "sql7.freemysqlhosting.net",
 	user: "sql7730644",
 	database: "sql7730644",
@@ -443,50 +454,22 @@ let sqlConnect = () => {
 	});
 }
 
-// check group fn
-let checkGroup = function (msg, choosenGroup) {
-	let chatId = msg.chat.id
-	let groupFinded = false
-	pool.getConnection(function (err, connection) {
-		if (err) {
-			console.error("Ошибка подключения SQL(для проверки группы): " + err.message);
-			return;
-		}
-		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
-			connection.release()
-			if (err) {
-				bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
-				return console.error("Ошибка проверки группы в SQL: " + err.message)
-			}
-			res.map(el => {
-				if (el.chat_id == chatId) {
-					choosenGroup = el.choosen_group;
-					groupFinded = true
-					return
-				}
-			})
-			if (groupFinded == false) {
-				return addId(msg, choosenGroup)
-			}
-			checkCommands(msg, choosenGroup)
-		})
-	})
-}
-
 // Добавление id в бд
 let addId = function (msg, choosenGroup) {
 	let text = msg.text
 	let chatId = msg.chat.id
+
 	if (text != null && text != undefined && text != '') {
 		if (text[0] == '/') {
 			text = text.slice(1)
 		}
 	}
-	listsOfData.map(listOfData => {
-		listOfData[0].map(el => {
+	if (text.substring(0, 3) == '09-') {
+		let course = 4 - Number(text[3])
+		listsOfData[course][0].map(el => {
 			if (text == el) {
 				choosenGroup = String(text);
-				checkCommands(msg, choosenGroup)
+				//checkCommands(msg, choosenGroup)
 				const sql = "INSERT INTO dailyProphet VALUES (?, ?, 1)";
 				const groupValues = [chatId, choosenGroup]
 				whoNeedSchedule.push({
@@ -520,18 +503,14 @@ let addId = function (msg, choosenGroup) {
 				})
 			}
 		})
-	})
-	if (choosenGroup == '') {
-		let justStartComms = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot']
-		let justListOfCommandsVersions = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot', 'Информация', 'Инфо', '/change', 'change', '/change@DailyProphetKpfuBot', 'change@DailyProphetKpfuBot']
-		if (choosenGroup == '' && (!(justListOfCommandsVersions.includes(text)))) {
+		if (choosenGroup == '') {
 			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
 		}
-		if (justStartComms.includes(text)) {
-			checkCommands(msg, choosenGroup)
-		}
 	}
-
+	let justStartComms = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot']
+	if (justStartComms.includes(text)) {
+		checkCommands(msg, choosenGroup)
+	}
 }
 
 // listener сoобщений
@@ -541,12 +520,12 @@ let onListener = () => {
 		const chatId = msg.chat.id
 		for (bdString of whoNeedSchedule) {
 			if (bdString.chat_id == chatId) {
-				choosenGroup = bdString.choosen_group				
+				choosenGroup = bdString.choosen_group
 			}
 		}
-		console.log(choosenGroup, msg.text, ' от: ', msg.from.first_name)
+		console.log("Группа: " + choosenGroup, ", текст: " + msg.text, ', от: ', msg.from.first_name)
 		if (choosenGroup == '') {
-			checkGroup(msg, choosenGroup)
+			addId(msg, choosenGroup)
 		} else {
 			checkCommands(msg, choosenGroup)
 		}
