@@ -238,8 +238,9 @@ let checkCommands = function (msg, group) {
 			}
 		})
 	}
-	let localCourse = 4 - Number(text[3])
+	
 	if (text.substring(0, 3) == '09-' && text != group) {
+		let localCourse = 4 - Number(text[3])
 		let groupFinded = false
 		listsOfData[localCourse][0].map(bdGroup => {
 
@@ -523,7 +524,7 @@ let onListener = () => {
 				choosenGroup = bdString.choosen_group
 			}
 		}
-		console.log("Группа: " + choosenGroup, ", текст: " + msg.text, ', от: ', msg.from.first_name)
+		console.log("Группа: " + choosenGroup + ", текст: " + msg.text + ', от: ' + msg.from.first_name)
 		if (choosenGroup == '') {
 			addId(msg, choosenGroup)
 		} else {
@@ -534,6 +535,7 @@ let onListener = () => {
 
 // check time function
 async function checkDayAndTime() {
+	let queue = []
 	let newestTime = new Date()
 	let offset = newestTime.getTimezoneOffset() + 180
 	let now = new Date(new Date() - 0 + offset * 60 * 1000 + 1000 * 60 * 10)
@@ -553,17 +555,40 @@ async function checkDayAndTime() {
 									if (groupsFromBD.choosen_group == tempGroup && groupsFromBD.notifications == 1) {
 										let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
 										reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
-										bot.sendMessage(groupsFromBD.chat_id, reminderTxt)
+
+										queue.push({
+											chatIndex: groupsFromBD.chat_id,
+											text: reminderTxt
+										})
 									}
 								}
 							}
 						}
 					}
 				}
-
 			}
 		})
 	})
+	if (queue.length > 0) {
+		let returnsCou = 0
+		let waitSec = () => {
+			let restI = 30
+			if (queue.length - returnsCou * 30 < 30) {
+				restI = queue.length - returnsCou * 30
+			}
+			for (let i = 0; i < restI; i++) {
+				let queueI = queue[i + returnsCou * 30]
+				bot.sendMessage(queueI.chatIndex, queueI.text)
+			}
+			returnsCou++
+			if (returnsCou * 30 > queue.length) {
+				clearInterval(intervalOfSeconds)
+			}
+		}
+		let intervalOfSeconds = setInterval(waitSec, 1000)
+
+		intervalOfSeconds
+	}
 }
 setInterval(checkDayAndTime, 60000);
 
@@ -571,3 +596,4 @@ setInterval(() => {
 	fetch('https://thedailyprophet.onrender.com/')
 	googleSheetsUpdate()
 }, 1000 * 60 * 10)
+fetch('https://thedailyprophet.onrender.com/')
