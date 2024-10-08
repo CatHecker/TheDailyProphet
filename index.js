@@ -238,46 +238,46 @@ let checkCommands = function (msg, group) {
 			}
 		})
 	}
-	
-	if (text.substring(0, 3) == '09-' && text != group) {
-		let localCourse = 4 - Number(text[3])
-		let groupFinded = false
-		listsOfData[localCourse][0].map(bdGroup => {
+	if (text != null && text != '') {
+		if (text.substring(0, 3) == '09-' && text != group) {
+			let localCourse = 4 - Number(text[3])
+			let groupFinded = false
+			listsOfData[localCourse][0].map(bdGroup => {
 
-			if (text == bdGroup) {
-				groupFinded = true
-				group = String(text);
-				whoNeedSchedule.map(el => {
-					if (el.chat_id == chatId) {
-						el.choosen_group = text
-					}
-				})
-				pool.getConnection(function (err, connection) {
-					if (err) {
-						console.error("Ошибка подключения SQL(для обновления группы): " + err.message);
-						return;
-					}
-					connection.execute("UPDATE dailyProphet SET choosen_group = ? WHERE chat_id = ?", [text, chatId], function (err, res) {
-						connection.release()
-						if (err) {
-							console.error('Ошибка при обновлении группы SQL:' + err.message)
-							bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
-							return
-						} else {
-							let noteMessage = `✅ Группа записана: ${text}`
-							bot.sendMessage(chatId, noteMessage)
+				if (text == bdGroup) {
+					groupFinded = true
+					group = String(text);
+					whoNeedSchedule.map(el => {
+						if (el.chat_id == chatId) {
+							el.choosen_group = text
 						}
 					})
-				})
+					pool.getConnection(function (err, connection) {
+						if (err) {
+							console.error("Ошибка подключения SQL(для обновления группы): " + err.message);
+							return;
+						}
+						connection.execute("UPDATE dailyProphet SET choosen_group = ? WHERE chat_id = ?", [text, chatId], function (err, res) {
+							connection.release()
+							if (err) {
+								console.error('Ошибка при обновлении группы SQL:' + err.message)
+								bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+								return
+							} else {
+								let noteMessage = `✅ Группа записана: ${text}`
+								bot.sendMessage(chatId, noteMessage)
+							}
+						})
+					})
+				}
+			})
+			if (!groupFinded) {
+				bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
 			}
-		})
-		if (!groupFinded) {
-			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
+		} else if (text == group) {
+			bot.sendMessage(chatId, '❗ Вы уже выбрали эту группу ❗')
 		}
-	} else if (text == group) {
-		bot.sendMessage(chatId, '❗ Вы уже выбрали эту группу ❗')
 	}
-
 }
 /* Функция подключения google sheets */
 const {
