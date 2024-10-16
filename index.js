@@ -241,37 +241,38 @@ let checkCommands = function (msg, group) {
 		})
 	}
 	if (text != null && text != '') {
-		if (text.substring(0, 3) == '09-' && text != group) {
-			if (listsOfData[course][0].includes(text)) {
-				group = String(text);
-				whoNeedSchedule.forEach(el => {
-					if (el.chat_id === chatId) {
-						console.log('yes')
-						el.choosen_group = text
-					}
-				})
-				pool.getConnection(function (err, connection) {
-					if (err) {
-						console.error("Ошибка подключения SQL(для обновления группы): " + err.message);
-						return;
-					}
-					connection.execute("UPDATE dailyProphet SET choosen_group = ? WHERE chat_id = ?", [text, chatId], function (err, res) {
-						connection.release()
-						if (err) {
-							console.error('Ошибка при обновлении группы SQL:' + err.message)
-							bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
-							return
-						} else {
-							let noteMessage = `✅ Группа записана: ${text}`
-							bot.sendMessage(chatId, noteMessage)
-						}
-					})
-				})
-			} else {
-				bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
-			}
-		} else if (text == group) {
+		if (text == group) {
 			bot.sendMessage(chatId, '❗ Вы уже выбрали эту группу ❗')
+			return
+		}
+		if (listsOfData[course][0].includes(text) == false) {
+			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
+			return
+		}
+		if (text.substring(0, 3) == '09-') {
+			group = String(text);
+			whoNeedSchedule.forEach(el => {
+				if (el.chat_id === chatId) {
+					el.choosen_group = text
+				}
+			})
+			pool.getConnection(function (err, connection) {
+				if (err) {
+					console.error("Ошибка подключения SQL(для обновления группы): " + err.message);
+					return;
+				}
+				connection.execute("UPDATE dailyProphet SET choosen_group = ? WHERE chat_id = ?", [text, chatId], function (err, res) {
+					connection.release()
+					if (err) {
+						console.error('Ошибка при обновлении группы SQL:' + err.message)
+						bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+						return
+					} else {
+						let noteMessage = `✅ Группа записана: ${text}`
+						bot.sendMessage(chatId, noteMessage)
+					}
+				})
+			})
 		}
 	}
 }
@@ -385,6 +386,27 @@ bot.on('callback_query', query => {
 			notificationsEnable = el.notifications
 		}
 	})
+
+	// let createQuerySQL = () => {
+	// 	pool.getConnection(function (err, connection) {
+	// 		if (err) {
+	// 			console.error("Ошибка подключения SQL: " + err.message);
+	// 			bot.sendMessage(chatId, `⛔ Ошибка подключения к базе данных. Попробуйте позже.`);
+	// 			return;
+	// 		}
+	// 	})
+	// 	connection.execute(querySQL, values, function(err, res) {
+	// 		connection.release()
+	// 		if (err) {
+	// 			console.error('Ошибка SQL:' + err.message)
+	// 			bot.sendMessage(msg.chat.id, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+	// 			return
+	// 		} else {
+	// 			// тут я не понимаю как реализовать ведь у меня тут всегда разные действия
+	// 		}
+	// 	})
+	// }
+
 	pool.getConnection(function (err, connection) {
 		if (err) {
 			console.error("Ошибка подключения SQL(для обновления уведомлений): " + err.message);
@@ -415,6 +437,7 @@ const mysql = require("mysql2");
 
 const pool = mysql.createPool({
 	connectionLimit: 100,
+	connectTimeout: 10000,
 	host: "sql7.freemysqlhosting.net",
 	user: "sql7730644",
 	database: "sql7730644",
@@ -509,7 +532,7 @@ let addId = function (msg, choosenGroup) {
 		if (choosenGroup == '') {
 			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
 		} else {
-			
+
 		}
 	}
 	let justStartComms = ['/start', 'start', 'start@DailyProphetKpfuBot', '/start@DailyProphetKpfuBot']
