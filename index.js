@@ -73,26 +73,36 @@ let checkCommands = function (msg, group) {
 			group = ''
 			const sql1 = "DELETE FROM dailyProphet WHERE chat_id = ?";
 			const groupValues1 = [chatId];
-			pool.getConnection(function (err, connection) {
-				if (err) {
-					console.error("Ошибка подключения SQL(для удаления строки): " + err.message);
-					return;
-				} else {
-					connection.execute(sql1, groupValues1, (err, res) => {
-						connection.release()
-						if (err) {
-							console.error("Ошибка удаления строчки SQL: " + err.message);
-							bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
-							return;
-						}
-						bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
-							reply_markup: {
-								remove_keyboard: true
+			let updateGroup = (attempts) => {
+				pool.getConnection(function (err, connection) {
+					if (err) {
+						console.error("Ошибка подключения SQL(для удаления строки): " + err.message);
+						bot.sendMessage(chatId, `⛔ Ошибка подключения к базе данных. Попробуйте позже.`);
+						return;
+					} else {
+						connection.execute(sql1, groupValues1, (err, res) => {
+							connection.release()
+							if (err) {
+								if (err.message.includes('ECONNRESET') && attempts > 0) {
+									setTimeout(() => updateGroup(attempts - 1), 2000)
+								} else {
+									console.error("Ошибка удаления строчки SQL: " + err.message);
+									bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
+									return;
+								}
+							} else {
+								bot.sendMessage(chatId, `✅ Значение группы сброшено, введите новый номер группы`, {
+									reply_markup: {
+										remove_keyboard: true
+									}
+								});
 							}
+
 						});
-					});
-				}
-			})
+					}
+				})
+			}
+			updateGroup(5)
 			return;
 		}
 	}
@@ -245,11 +255,11 @@ let checkCommands = function (msg, group) {
 			bot.sendMessage(chatId, '❗ Вы уже выбрали эту группу ❗')
 			return
 		}
-		if (listsOfData[course][0].includes(text) == false) {
-			bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
-			return
-		}
 		if (text.substring(0, 3) == '09-') {
+			if (listsOfData[course][0].includes(text) == false) {
+				bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
+				return
+			}
 			group = String(text);
 			whoNeedSchedule.forEach(el => {
 				if (el.chat_id === chatId) {
