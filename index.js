@@ -618,8 +618,10 @@ async function checkDayAndTime() {
 				try {
 					bot.sendMessage(queueI.chatIndex, queueI.text)
 				} catch (error) {
-					if (error.response && error.response.statusCode == 403) {
+					if (error.message.includes('403 Forbidden')) {
 						console.log(`User  with chatId: ${chatId} blocked the bot or deleted the chat.`);
+					} else {
+						console.log(`User: ${chatId}, Error: ${error.message}`)
 					}
 				}
 			}
@@ -628,7 +630,7 @@ async function checkDayAndTime() {
 				clearInterval(intervalOfSeconds)
 			}
 		}
-		let intervalOfSeconds = setInterval(waitSec, 1000)
+		let intervalOfSeconds = setInterval(waitSec, 3000)
 
 		intervalOfSeconds
 	}
