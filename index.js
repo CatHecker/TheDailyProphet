@@ -75,13 +75,13 @@ let checkCommands = function (msg, group) {
 			const groupValues1 = [chatId];
 			let updateGroup = (attempts) => {
 				pool.getConnection(function (err, connection) {
+					connection.release()
 					if (err) {
 						console.error("Ошибка подключения SQL(для удаления строки): " + err);
 						bot.sendMessage(chatId, `⛔ Ошибка подключения к базе данных. Попробуйте позже.`);
 						return;
 					} else {
 						connection.execute(sql1, groupValues1, (err, res) => {
-							connection.release()
 							if (err) {
 								if (err.message.includes('ECONNRESET') && attempts > 0) {
 									setTimeout(() => updateGroup(attempts - 1), 3000)
@@ -267,12 +267,13 @@ let checkCommands = function (msg, group) {
 				}
 			})
 			pool.getConnection(function (err, connection) {
+				connection.release()
 				if (err) {
 					console.error("Ошибка подключения SQL(для обновления группы): " + err);
 					return;
 				}
 				connection.execute("UPDATE dailyProphet SET choosen_group = ? WHERE chat_id = ?", [text, chatId], function (err, res) {
-					connection.release()
+					
 					if (err) {
 						console.error('Ошибка при обновлении группы SQL:' + err)
 						bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
@@ -397,33 +398,13 @@ bot.on('callback_query', query => {
 		}
 	})
 
-	// let createQuerySQL = () => {
-	// 	pool.getConnection(function (err, connection) {
-	// 		if (err) {
-	// 			console.error("Ошибка подключения SQL: " + err.message);
-	// 			bot.sendMessage(chatId, `⛔ Ошибка подключения к базе данных. Попробуйте позже.`);
-	// 			return;
-	// 		}
-	// 	})
-	// 	connection.execute(querySQL, values, function(err, res) {
-	// 		connection.release()
-	// 		if (err) {
-	// 			console.error('Ошибка SQL:' + err.message)
-	// 			bot.sendMessage(msg.chat.id, `⛔ Произошла ошибка! Попробуйте ещё раз`)
-	// 			return
-	// 		} else {
-	// 			// тут я не понимаю как реализовать ведь у меня тут всегда разные действия
-	// 		}
-	// 	})
-	// }
-
 	pool.getConnection(function (err, connection) {
+		connection.release()
 		if (err) {
 			console.error("Ошибка подключения SQL(для обновления уведомлений): " + err);
 			return;
 		}
 		connection.execute("UPDATE dailyProphet SET notifications = ? WHERE chat_id = ?", [notificationsEnable, msg.chat.id], function (err, res) {
-			connection.release()
 			if (err) {
 				console.error('Ошибка при обновлении уведомлений SQL:' + err)
 				bot.sendMessage(msg.chat.id, `⛔ Произошла ошибка! Попробуйте ещё раз`)
@@ -456,11 +437,11 @@ const pool = mysql.createPool({
 let firstSqlConnect = 1
 let sqlConnect = () => {
 	pool.getConnection(function (err, connection) {
+		connection.release()
 		if (err) {
 			return console.error("Ошибка подключения SQL: " + err);
 		}
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
-			connection.release()
 			if (err) {
 				console.error("Ошибка извлечения данных из БД: " + err)
 				bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
@@ -514,12 +495,12 @@ let addId = function (msg, choosenGroup) {
 				notifications: 1
 			})
 			pool.getConnection(function (err, connection) {
+				connection.release()
 				if (err) {
 					console.error("Ошибка подключения SQL(при добавлении группы): " + err);
 					return;
 				}
 				connection.execute(sql, groupValues, function (err, res) {
-					connection.release()
 					if (err) {
 						console.error("Ошибка добавления группы в SQL: " + err);
 						bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
