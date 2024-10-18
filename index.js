@@ -76,7 +76,7 @@ let checkCommands = function (msg, group) {
 			let updateGroup = (attempts) => {
 				pool.getConnection(function (err, connection) {
 					if (err) {
-						console.error("Ошибка подключения SQL(для удаления строки): " + err.message);
+						console.error("Ошибка подключения SQL(для удаления строки): " + err);
 						bot.sendMessage(chatId, `⛔ Ошибка подключения к базе данных. Попробуйте позже.`);
 						return;
 					} else {
@@ -84,9 +84,9 @@ let checkCommands = function (msg, group) {
 							connection.release()
 							if (err) {
 								if (err.message.includes('ECONNRESET') && attempts > 0) {
-									setTimeout(() => updateGroup(attempts - 1), 2000)
+									setTimeout(() => updateGroup(attempts - 1), 3000)
 								} else {
-									console.error("Ошибка удаления строчки SQL: " + err.message);
+									console.error("Ошибка удаления строчки SQL: " + err);
 									bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 									return;
 								}
@@ -102,7 +102,7 @@ let checkCommands = function (msg, group) {
 					}
 				})
 			}
-			updateGroup(5)
+			updateGroup(10)
 			return;
 		}
 	}
@@ -268,13 +268,13 @@ let checkCommands = function (msg, group) {
 			})
 			pool.getConnection(function (err, connection) {
 				if (err) {
-					console.error("Ошибка подключения SQL(для обновления группы): " + err.message);
+					console.error("Ошибка подключения SQL(для обновления группы): " + err);
 					return;
 				}
 				connection.execute("UPDATE dailyProphet SET choosen_group = ? WHERE chat_id = ?", [text, chatId], function (err, res) {
 					connection.release()
 					if (err) {
-						console.error('Ошибка при обновлении группы SQL:' + err.message)
+						console.error('Ошибка при обновлении группы SQL:' + err)
 						bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 						return
 					} else {
@@ -419,13 +419,13 @@ bot.on('callback_query', query => {
 
 	pool.getConnection(function (err, connection) {
 		if (err) {
-			console.error("Ошибка подключения SQL(для обновления уведомлений): " + err.message);
+			console.error("Ошибка подключения SQL(для обновления уведомлений): " + err);
 			return;
 		}
 		connection.execute("UPDATE dailyProphet SET notifications = ? WHERE chat_id = ?", [notificationsEnable, msg.chat.id], function (err, res) {
 			connection.release()
 			if (err) {
-				console.error('Ошибка при обновлении уведомлений SQL:' + err.message)
+				console.error('Ошибка при обновлении уведомлений SQL:' + err)
 				bot.sendMessage(msg.chat.id, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 				return
 			} else {
@@ -447,7 +447,7 @@ const mysql = require("mysql2");
 
 const pool = mysql.createPool({
 	connectionLimit: 100,
-	connectTimeout: 10000,
+	connectTimeout: 86400000,
 	host: "sql7.freemysqlhosting.net",
 	user: "sql7730644",
 	database: "sql7730644",
@@ -457,12 +457,12 @@ let firstSqlConnect = 1
 let sqlConnect = () => {
 	pool.getConnection(function (err, connection) {
 		if (err) {
-			return console.error("Ошибка подключения SQL: " + err.message);
+			return console.error("Ошибка подключения SQL: " + err);
 		}
 		connection.execute("SELECT * FROM dailyProphet", function (err, res) {
 			connection.release()
 			if (err) {
-				console.error("Ошибка извлечения данных из БД: " + err.message)
+				console.error("Ошибка извлечения данных из БД: " + err)
 				bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 				return
 			} else {
@@ -515,13 +515,13 @@ let addId = function (msg, choosenGroup) {
 			})
 			pool.getConnection(function (err, connection) {
 				if (err) {
-					console.error("Ошибка подключения SQL(при добавлении группы): " + err.message);
+					console.error("Ошибка подключения SQL(при добавлении группы): " + err);
 					return;
 				}
 				connection.execute(sql, groupValues, function (err, res) {
 					connection.release()
 					if (err) {
-						console.error("Ошибка добавления группы в SQL: " + err.message);
+						console.error("Ошибка добавления группы в SQL: " + err);
 						bot.sendMessage(chatId, `⛔ Произошла ошибка! Попробуйте ещё раз`)
 						return
 					}
@@ -621,7 +621,7 @@ async function checkDayAndTime() {
 					if (error.message.includes('403 Forbidden')) {
 						console.log(`User  with chatId: ${chatId} blocked the bot or deleted the chat.`);
 					} else {
-						console.log(`User: ${chatId}, Error: ${error.message}`)
+						console.log(`User: ${chatId}, Error: ${error}`)
 					}
 				}
 			}
