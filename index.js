@@ -58,6 +58,46 @@ let queryCreator = function (sql, values, fn = () => {
 	})
 }
 
+let linkDestroyer = (lections, googleString, groupIndex) => {
+	let platforms = [1, 1, 1, 1, 1, 1, 1]
+	lections += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
+	let strCell = googleString[groupIndex]
+	googleString[groupIndex] = googleString[groupIndex].split('\n')
+	for (googleCell of googleString[groupIndex]) {
+		let link = googleCell
+		let textOfLink = ''
+		if (googleCell.includes('https://')) {
+			if (googleCell.includes('telemost')) {
+				textOfLink = `Телемост - ${platforms[0]++}`
+			} else if (googleCell.includes('mts-link')) {
+				textOfLink = `МТС-Линк - ${platforms[1]++}`
+			} else if (googleCell.includes('yandex.ru/chat')) {
+				textOfLink = `Яндекс Чат - ${platforms[2]++}`
+			} else if (googleCell.includes('yandex.ru/event')) {
+				textOfLink = `Яндекс Календарь - ${platforms[3]++}`
+			} else if (googleCell.includes('discord')) {
+				textOfLink = `Discord - ${platforms[4]++}`
+			} else if (googleCell.includes('zoom')) {
+				textOfLink = `Zoom - ${platforms[5]++}`
+			} else {
+				textOfLink = `Материалы - ${platforms[6]++}`
+			}
+			googleCell = `<a href= '${link}' > ${textOfLink} </a>\n`
+		}
+		if (googleCell == '') {
+			lections += '\n\n'
+		}
+		lections += googleCell
+	}
+	lections = lections.replace(/Ссылка на консультацию:/gi, '')
+	lections = lections.replace(/Ссылка на консультацию: /gi, '')
+	lections = lections.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
+	lections = lections.replace(/Ссылка на трансляцию для зрителей:/gi, '')
+
+	googleString[groupIndex] = strCell
+	return lections
+}
+
 
 let checkCommands = function (msg, group) {
 	let text = msg.text;
@@ -69,10 +109,12 @@ let checkCommands = function (msg, group) {
 		bot.sendMessage(chatId, `❌ Такой группы не существует или её нет в базе данных бота ❌`)
 		return
 	}
-
 	if (text != null && text != undefined && text != '' && text[0] == '/') {
 		text = text.slice(1)
 	}
+
+// ===========   START   ===========
+
 	if (text === 'start' || text == 'start@DailyProphetKpfuBot') {
 		let startMessage = `
 <strong>🌟 Добро пожаловать, студент! 🌟</strong>
@@ -89,6 +131,8 @@ let checkCommands = function (msg, group) {
 		return
 	}
 
+// ===========   CHANGE   ===========
+	
 	if (text === 'change' || text == 'change@DailyProphetKpfuBot') {
 		if (group == '') {
 			bot.sendMessage(chatId, `❌ Для выполнения этой команды нужно сначала ввести группу! ❌`)
@@ -114,46 +158,9 @@ let checkCommands = function (msg, group) {
 			return;
 		}
 	}
-	let linkDestroyer = (lections, googleString, groupIndex) => {
-		let platforms = [1, 1, 1, 1, 1, 1, 1]
-		lections += `⏰ ${googleString[1]}-${googleString[2]}\n\n`
-		let strCell = googleString[groupIndex]
-		googleString[groupIndex] = googleString[groupIndex].split('\n')
-		for (googleCell of googleString[groupIndex]) {
-			let link = googleCell
-			let textOfLink = ''
-			if (googleCell.includes('https://')) {
-				if (googleCell.includes('telemost')) {
-					textOfLink = `Телемост - ${platforms[0]++}`
-				} else if (googleCell.includes('mts-link')) {
-					textOfLink = `МТС-Линк - ${platforms[1]++}`
-				} else if (googleCell.includes('yandex.ru/chat')) {
-					textOfLink = `Яндекс Чат - ${platforms[2]++}`
-				} else if (googleCell.includes('yandex.ru/event')) {
-					textOfLink = `Яндекс Календарь - ${platforms[3]++}`
-				} else if (googleCell.includes('discord')) {
-					textOfLink = `Discord - ${platforms[4]++}`
-				} else if (googleCell.includes('zoom')) {
-					textOfLink = `Zoom - ${platforms[5]++}`
-				} else {
-					textOfLink = `Материалы - ${platforms[6]++}`
-				}
-				googleCell = `<a href= '${link}' > ${textOfLink} </a>\n`
-			}
-			if (googleCell == '') {
-				lections += '\n\n'
-			}
-			lections += googleCell
-		}
-		lections = lections.replace(/Ссылка на консультацию:/gi, '')
-		lections = lections.replace(/Ссылка на консультацию: /gi, '')
-		lections = lections.replace(/Ссылка на видеовстресу для организатора и участников:/gi, '')
-		lections = lections.replace(/Ссылка на трансляцию для зрителей:/gi, '')
 
-		googleString[groupIndex] = strCell
-		return lections
-	}
 	//schedule for today
+
 	if ((text == 'На сегодня' || text == 'На завтра' || text == 'Расписание на сегодня') && group !== '') {
 		let groupIndex = listsOfData[course][0].indexOf(group)
 		let time1 = new Date()
@@ -181,7 +188,9 @@ let checkCommands = function (msg, group) {
 			disable_web_page_preview: true
 		})
 	}
+
 	// schedule for week
+
 	let weekDayNames = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
 	if (weekDayNames.includes(text)) {
 		lectionsFDW = `<b>${text}:</b>\n\n`
@@ -201,7 +210,6 @@ let checkCommands = function (msg, group) {
 		})
 	}
 	if ((text == 'Расписание на неделю' || text == 'На неделю') && group !== '') {
-
 		let tempWeekDay = 1
 		let groupIndex = listsOfData[course][0].indexOf(group)
 		let lectionsForWeek = `
@@ -225,7 +233,9 @@ let checkCommands = function (msg, group) {
 			disable_web_page_preview: true
 		})
 	}
+
 	// Информация
+
 	let noti = '⛔️'
 	let inlineBut = 'Включить'
 	if (text == 'Инфо' && group != '') {
@@ -280,7 +290,9 @@ let checkCommands = function (msg, group) {
 		}
 	}
 }
+
 /* Функция подключения google sheets */
+
 const {
 	google
 } = require("googleapis");
@@ -527,7 +539,7 @@ async function checkDayAndTime() {
 									if (groupsFromBD.choosen_group == tempGroup && groupsFromBD.notifications == 1) {
 										let reminderTxt = `⏰ Через 10 минут начинается ${googleString[gIndex]}`
 										reminderTxt = reminderTxt.replace(/💻 Описание пары:/gi, '')
-
+										//reminderTxt = linkDestroyer(reminderTxt, googleString, gIndex, 1)
 										queue.push({
 											chatIndex: groupsFromBD.chat_id,
 											text: reminderTxt
@@ -551,7 +563,7 @@ async function checkDayAndTime() {
 			for (let i = 0; i < restI; i++) {
 				let queueI = queue[i + returnsCou * 25]
 				try {
-					bot.sendMessage(queueI.chatIndex, queueI.text)
+					bot.sendMessage(queueI.chatIndex, queueI.text, { parse_mode: "HTML"})
 				} catch (error) {
 					if (error.message.includes('403 Forbidden')) {
 						console.log(`User  with chatId: ${chatId} blocked the bot or deleted the chat.`);
@@ -570,7 +582,7 @@ async function checkDayAndTime() {
 		intervalOfSeconds
 	}
 }
-setInterval(checkDayAndTime, 60000);
+//setInterval(checkDayAndTime, 60000);
 
 setInterval(() => {
 	fetch('https://thedailyprophet.onrender.com/')
