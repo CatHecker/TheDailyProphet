@@ -2,3 +2,5 @@ node_modules/
 google_file.json
 token.txt
 .env
+legacy/
+test.js

@@ -1,23 +1,37 @@
 {
   "name": "thedailyprophet",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js"
+    "dev": "npx tsx watch src/index.ts",
+    "start": "npx tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "cheerio": "^1.1.2",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "googleapis": "^144.0.0",
     "install": "^0.13.0",
     "mysql": "^2.18.1",
     "mysql2": "^3.11.0",
+    "node-cron": "^4.2.1",
+    "node-fetch": "^3.3.2",
     "node-telegram-bot-api": "^0.66.0",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "redis": "^5.7.0",
+    "thedailyprophet": "file:",
+    "xlsx": "^0.18.5"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.1.0",
+    "@types/node-telegram-bot-api": "^0.64.10",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2"
   }
 }

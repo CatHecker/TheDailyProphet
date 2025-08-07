@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "module": "nodenext",
+    "target": "es2017",
+    "esModuleInterop": true,
+    "allowJs": true,
+    "checkJs": true,
+    "moduleResolution": "nodenext"
+  },
+  "include": ["src", "legacy/google_sheets_connection.js", "legacy/change.ts"],
+  "exclude": ["node_modules"]
+}
