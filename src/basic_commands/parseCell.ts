@@ -24,25 +24,6 @@ export function parseScheduleCell(cellText: string) {
   // Убираем в начале диапазон недель типа (1-15 неделя), (14 неделя)
   cellText = cellText.replace(/\(\s*\d+(-\d+)?\s*неделя\s*\)\s*/gi, "");
 
-  // const teacherMatch = cellText.match(/([А-ЯЁ][а-яё]+\s[А-ЯЁ]\.?[А-ЯЁ]?\.?)/);
-
-  // const roomMatch = cellText.match(/ауд\..*$/i);
-  // let room = "";
-
-  // if (roomMatch) {
-  //   room = roomMatch[0].trim();
-  // }
-
-  // let subjectEndIndex = cellText.length;
-  // if (teacherMatch)
-  //   subjectEndIndex = Math.min(subjectEndIndex, teacherMatch.index!);
-  // if (roomMatch) subjectEndIndex = Math.min(subjectEndIndex, roomMatch.index!);
-
-  // const subject = cellText
-  //   .slice(0, subjectEndIndex)
-  //   .trim()
-  //   .replace(/\.+$/g, "");
-
   // const teacher = teacherMatch ? teacherMatch[0].trim() : "";
   let firstPunctIndex = cellText.indexOf(".");
 

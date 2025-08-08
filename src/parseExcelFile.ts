@@ -1,5 +1,8 @@
 import XLSX from "xlsx";
-import fs from "fs";
+import * as fs from "fs";
+
+// Подключаем fs для поддержки readFile в версии ES-модуля XLSX
+XLSX.set_fs(fs);
 
 // Читаем файл из локального хранилища
 const workbook = XLSX.readFile("schedule_2sem_2024_2025.xlsx");
@@ -26,4 +29,3 @@ export const schedule: string[][] = XLSX.utils.sheet_to_json(sheet, {
   header: 1,
   defval: "",
 });
-

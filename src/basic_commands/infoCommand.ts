@@ -1,4 +1,4 @@
-import { sendMessage } from "../index.js";
+import { sendMessage } from "../bot.js";
 
 export const infoCommand = (chatId: string, group: string | null) => {
   sendMessage(

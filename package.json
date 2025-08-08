@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "dev": "npx tsx watch src/index.ts",
-    "start": "npx tsx src/index.ts"
+    "dev": "npx tsx watch ./index.ts",
+    "start": "npx tsx ./index.ts"
   },
   "keywords": [],
   "author": "",
@@ -24,7 +24,7 @@
     "nodemon": "^3.1.4",
     "redis": "^5.7.0",
     "thedailyprophet": "file:",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   },
   "type": "module",
   "devDependencies": {

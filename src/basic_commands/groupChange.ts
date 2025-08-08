@@ -1,5 +1,5 @@
 import { queryCreator } from "../db.js";
-import { sendMessage } from "../index.js";
+import { sendMessage } from "../bot.js";
 import { schedule } from "../parseExcelFile.js";
 import { cacheUserGroup } from "../redis_connections.js";
 

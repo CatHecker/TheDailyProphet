@@ -1,4 +1,4 @@
-import { sendMessage } from "../index.js";
+import { sendMessage } from "../bot.js";
 import { schedule } from "../parseExcelFile.js";
 import { parseScheduleCell } from "./parseCell.js";
 
@@ -38,7 +38,7 @@ export const commandsFDW = async (
     Суббота: "сб",
   };
   let now = new Date();
-  
+
   if (text === "На сегодня") {
     if (now.getDay() === 0) {
       sendMessage(chatId, "Сегодня воскресенье 🤪");
@@ -51,7 +51,7 @@ export const commandsFDW = async (
     if (now.getDay() === 6) {
       sendMessage(chatId, "Завтра воскресенье 🤪");
       return true;
-    } 
+    }
     text = Object.keys(weekDayObj)[now.getDay()];
   }
   if (!(text in weekDayObj)) {

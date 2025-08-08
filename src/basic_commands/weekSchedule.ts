@@ -1,4 +1,5 @@
-import { sendMessage } from "../index.js";
+
+import { sendMessage } from "../bot.js";
 import { schedule } from "../parseExcelFile.js";
 import { CellType, escapeHtml } from "./comandsFDW.js";
 import { parseScheduleCell } from "./parseCell.js";
@@ -19,7 +20,7 @@ export const weekSchedule = (chatId: string, group: string) => {
     сб: "Суббота",
   };
   let start = false;
-  let temp = ''
+  let temp = "";
   for (let row of schedule) {
     if (!row[1]) start = false;
     if (row[groupIndex] === group) {
